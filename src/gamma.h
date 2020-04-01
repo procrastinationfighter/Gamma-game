@@ -11,10 +11,20 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <malloc.h>
+#include "gamma_field.h"
 
 /**
  * Struktura przechowująca stan gry.
  */
+struct gamma {
+    player *players;
+    gamma_field **fields;
+    uint32_t board_width;
+    uint32_t board_height;
+    uint32_t max_areas;
+    uint64_t busy_fields;
+};
 typedef struct gamma gamma_t;
 
 /** @brief Tworzy strukturę przechowującą stan gry.
