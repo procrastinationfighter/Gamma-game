@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <malloc.h>
 #include "gamma_field.h"
+#include "player.h"
 
 /**
  * Struktura przechowująca stan gry.
@@ -23,7 +24,8 @@ struct gamma {
     uint32_t board_width;
     uint32_t board_height;
     uint32_t max_areas;
-    uint64_t busy_fields;
+    uint32_t players_count;
+    uint64_t free_fields;
 };
 typedef struct gamma gamma_t;
 

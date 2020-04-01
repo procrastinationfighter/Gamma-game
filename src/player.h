@@ -5,6 +5,7 @@
 
 struct player{
     uint32_t number_of_areas;
+    uint32_t number_of_fields;
     bool has_golden_move_available;
 };
 typedef struct player player;
