@@ -23,14 +23,15 @@ struct player{
     uint32_t adjacent_fields;
     bool has_golden_move_available;
 };
-typedef struct player player;
+typedef struct player player_t;
 
 /**
  * Struktura przechowująca stan gry.
  */
 struct gamma {
-    player *players;
+    player_t *players;
     gamma_field **fields;
+    bool **visited_fields_board;
     uint32_t board_width;
     uint32_t board_height;
     uint32_t max_areas;

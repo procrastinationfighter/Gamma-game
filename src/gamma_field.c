@@ -7,7 +7,6 @@ gamma_field* find_root_field(gamma_field *field, gamma_field **board) {
         root = &board[root->parent_x][root->parent_y];
     }
 
-
     /* Compressing path from current field to its root. */
     while(field != root) {
         gamma_field *temp = &board[field->parent_x][field->parent_y];
