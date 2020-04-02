@@ -13,7 +13,17 @@
 #include <stdint.h>
 #include <malloc.h>
 #include "gamma_field.h"
-#include "player.h"
+
+/**
+ * Struktura przechowująca dane o jednym graczu.
+ */
+struct player{
+    uint32_t number_of_areas;
+    uint32_t number_of_fields;
+    uint32_t adjacent_fields;
+    bool has_golden_move_available;
+};
+typedef struct player player;
 
 /**
  * Struktura przechowująca stan gry.
@@ -28,6 +38,8 @@ struct gamma {
     uint64_t free_fields;
 };
 typedef struct gamma gamma_t;
+
+
 
 /** @brief Tworzy strukturę przechowującą stan gry.
  * Alokuje pamięć na nową strukturę przechowującą stan gry.

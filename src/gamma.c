@@ -55,6 +55,7 @@ bool allocate_players(gamma_t *board, uint32_t players) {
         for(uint32_t i = 0; i < players; i++) {
             board->players[i].number_of_areas = 0;
             board->players[i].number_of_fields = 0;
+            board->players[i].adjacent_fields = 0;
             board->players[i].has_golden_move_available = true;
         }
     }
@@ -140,8 +141,8 @@ uint64_t gamma_free_fields(gamma_t *g, uint32_t player) {
     else if(g->players[player - 1].number_of_areas < g->max_areas){
         return g->free_fields;
     }
-    else { //todo
-
+    else {
+        return g->players[player-1].adjacent_fields;
     }
 }
 
@@ -159,9 +160,13 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
 
     return false;
 }
-/*
 
+
+//TODO - dokończyć
 char* gamma_board(gamma_t *g) {
+    for(uint32_t i = 0; i < g->board_width; i++) {
+        for(uint32_t j = 0; j < g->board_height; j++) {
 
+        }
+    }
 }
- */
