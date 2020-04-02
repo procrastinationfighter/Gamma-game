@@ -195,16 +195,21 @@ uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
        !does_player_own_adjacent_fields(board, player, x + 1, y)) {
         new_fields_count++;
     }
-    if(x != 0 && board->fields[x-1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
+
+    if(x != 0 &&
+       board->fields[x-1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x - 1, y)) {
         new_fields_count++;
     }
+
     if(y + 1 != board->board_height &&
        board->fields[x][y+1].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x, y + 1)) {
         new_fields_count++;
     }
-    if(y != 0 && board->fields[x+1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
+
+    if(y != 0 &&
+       board->fields[x+1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x, y - 1)) {
         new_fields_count++;
     }
@@ -212,20 +217,35 @@ uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
     return new_fields_count;
 }
 
-void add_and_unite_field(gamma_t *g, uint32_t player,
+//Returns number of different sets that were combined by unification
+__uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
                          uint32_t x, uint32_t y) {
+    uint32_t united_sets = 0;
     if(x + 1 != g->board_width && g->fields[x+1][y].owner_index == player) {
-        unite_fields(&g->fields[x][y], &g->fields[x+1][y], g->fields);
+        if(unite_fields(&g->fields[x][y], &g->fields[x+1][y], g->fields)) {
+            united_sets++;
+        }
     }
+
     if(x != 0 && g->fields[x-1][y].owner_index == player) {
-        unite_fields(&g->fields[x][y], &g->fields[x-1][y], g->fields);
+        if(unite_fields(&g->fields[x][y], &g->fields[x-1][y], g->fields)) {
+            united_sets++;
+        }
     }
+
     if(y + 1 != g->board_height && g->fields[x][y+1].owner_index == player) {
-        unite_fields(&g->fields[x][y], &g->fields[x][y+1], g->fields);
+        if(unite_fields(&g->fields[x][y], &g->fields[x][y+1], g->fields)) {
+            united_sets++;
+        }
     }
+
     if(x != 0 && g->fields[x][y-1].owner_index == player) {
-        unite_fields(&g->fields[x][y], &g->fields[x][y-1], g->fields);
+        if(unite_fields(&g->fields[x][y], &g->fields[x][y-1], g->fields)) {
+            united_sets++;
+        }
     }
+
+    return united_sets;
 }
 
 bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
@@ -249,23 +269,130 @@ bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
        g->free_fields--;
     }
     else {
-        curr_player->number_of_areas++;
         curr_player->number_of_fields++;
         curr_player->adjacent_fields += how_many_adjacent_fields_added(g, player, x, y);
         g->fields[x][y].owner_index = player;
         g->free_fields--;
-        add_and_unite_field(g, player, x, y);
+        uint32_t united_fields = add_and_unite_field(g, player, x, y);
+        (curr_player->number_of_areas) -= united_fields + 1;
     }
 
     return true;
 }
 
-/*
-bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 
+bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
+                                      uint32_t x, uint32_t y) {
+    if(x >= g->board_width || y >= g->board_height) {
+        return false;
+    }
+
+    uint32_t field_owner = g->fields[x][y].owner_index;
+    return (gamma_golden_possible(g, player) &&
+            field_owner != DEFAULT_PLAYER_NUMBER &&
+            field_owner != player);
 }
 
-*/
+void set_adjacent_fields_as_root(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
+    if(x + 1 != g->board_width && g->fields[x + 1][y].owner_index == player) {
+        g->fields[x + 1][y].parent_x = g->fields[x + 1][y].this_x;
+        g->fields[x + 1][y].parent_y = g->fields[x + 1][y].this_y;
+    }
+
+    if(x  != 0 && g->fields[x - 1][y].owner_index == player) {
+        g->fields[x - 1][y].parent_x = g->fields[x - 1][y].this_x;
+        g->fields[x - 1][y].parent_y = g->fields[x - 1][y].this_y;
+    }
+
+    if(y + 1 != g->board_height && g->fields[x][y + 1].owner_index == player) {
+        g->fields[x][y + 1].parent_x = g->fields[x][y + 1].this_x;
+        g->fields[x][y + 1].parent_y = g->fields[x][y + 1].this_y;
+    }
+
+    if(y != 0 && g->fields[x][y - 1].owner_index == player) {
+        g->fields[x][y - 1].parent_x = g->fields[x][y - 1].this_x;
+        g->fields[x][y - 1].parent_y = g->fields[x][y - 1].this_y;
+    }
+}
+
+//Uses BFS to check how many areas were made by removing field ownership.
+//Returns number of these areas.
+uint32_t update_areas_after_removal(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
+    uint32_t areas_count = 0;
+    if(x + 1 != g->board_width && g->fields[x + 1][y].owner_index == player) {
+        BFS(g, player, x + 1, y);
+        areas_count++;
+    }
+
+    if(x != 0 && g->fields[x - 1][y].owner_index == player) {
+        if (is_field_root(&g->fields[x - 1][y])){
+            BFS(g, player, x - 1, y);
+            areas_count++;
+        }
+    }
+
+    if(y + 1 != g->board_width && g->fields[x][y + 1].owner_index == player) {
+        if (is_field_root(&g->fields[x][y + 1])){
+            BFS(g, player, x, y + 1);
+            areas_count++;
+        }
+    }
+
+    if(y != 0 && g->fields[x][y - 1].owner_index == player) {
+        if (is_field_root(&g->fields[x][y - 1])){
+            BFS(g, player, x, y - 1);
+            areas_count++;
+        }
+    }
+
+    return areas_count;
+}
+
+//True if removal was legal, false otherwise. Assumes correct parameters.
+bool remove_field_ownership(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
+    gamma_field *curr_field = &g->fields[x][y];
+    curr_field->owner_index = DEFAULT_PLAYER_NUMBER;
+    bool is_removal_legal = true;
+
+    set_adjacent_fields_as_root(g, player, x, y);
+
+    g->fields[x][y].parent_x = x;
+    g->fields[x][y].parent_y = y;
+
+    uint32_t area_count = update_areas_after_removal(g, player, x, y);
+    if((g->players[player - 1].number_of_areas) + (area_count - 1) > g->max_areas) {
+        is_removal_legal = false;
+    }
+    else {
+        (g->players[player - 1].number_of_areas) += (area_count - 1);
+        (g->players[player - 1].number_of_fields)--;
+    }
+
+    return is_removal_legal;
+}
+
+bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
+    if(!are_golden_move_parameters_valid(g, player, x, y)) {
+        return false;
+    }
+
+    uint32_t target_player = g->fields[x][y].owner_index;
+    bool was_removing_successful = remove_field_ownership(g, player, x, y);
+    bool was_adding_successful = true;
+    if(was_removing_successful) {
+        was_adding_successful =  gamma_move(g, player, x, y);
+        if(was_adding_successful) {
+            return true;
+        }
+    }
+    //Removing or adding wasn't successful
+    if(!was_removing_successful) {
+        gamma_move(g, target_player, x, y);
+        return true;
+    }
+}
+
+
 uint64_t gamma_busy_fields(gamma_t *g, uint32_t player) {
     if(!is_player_parameter_valid(g, player)) {
         return 0;
