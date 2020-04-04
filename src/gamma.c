@@ -1,6 +1,8 @@
 #include "gamma.h"
 
 #define DEFAULT_PLAYER_NUMBER 0
+#define REALLOC_MULTIPLIER 2
+#define DEFAULT_PLAYER_IDENTIFIER '.'
 
 bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
                                     uint32_t players) {
@@ -559,13 +561,109 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
 }
 
 
-//TODO - dokończyć
-/*
-char* gamma_board(gamma_t *g) {
-    for(uint32_t i = 0; i < g->board_width; i++) {
-        for(uint32_t j = 0; j < g->board_height; j++) {
+bool realloc_string(char *s, uint64_t *size) {
+    *size = (REALLOC_MULTIPLIER * (*size));
+    s = realloc(s, *size * sizeof(char));
+    return (s == NULL);
+}
 
+
+bool add_character(char* s, char ch, uint64_t *length, uint64_t *size) {
+    bool string_not_null = true;
+    if(*length == *size) {
+        string_not_null = realloc_string(s, size);
+    }
+    if(!string_not_null) {
+        return false;
+    }
+    s[*length] = ch;
+    (*length)++;
+    return true;
+}
+
+
+uint32_t how_many_digits(uint32_t number) {
+    uint32_t i = 1;
+    bool finished = false;
+    while(!finished) {
+        number /= 10;
+        if(number == 0) {
+            finished = true;
+        }
+        else {
+            i++;
         }
     }
+
+    return i;
 }
-*/
+
+
+bool parse_multidigit_number(char* s, uint32_t number,
+                             uint64_t *length, uint64_t *size) {
+    bool memory_ok = add_character(s, '[', length, size);
+    if(!memory_ok) {
+        return false;
+    }
+    uint32_t digit_count = how_many_digits(number);
+    char *number_string = malloc(digit_count * sizeof(char));
+    if(number_string == NULL) {
+        return false;
+    }
+    sprintf(number_string, "%d", number);
+
+    for(uint32_t i = 0; i < digit_count; i++) {
+        memory_ok = add_character(s, number_string[i], length, size);
+        if(!memory_ok) {
+            free(number_string);
+            return false;
+        }
+    }
+    free(number_string);
+
+    memory_ok = add_character(s, ']', length, size);
+
+    return memory_ok;
+}
+
+
+char digit_to_char(uint32_t digit) {
+    return (char)(digit - (uint32_t) '0');
+}
+
+
+char* gamma_board(gamma_t *g) {
+    char *map_string = malloc(REALLOC_MULTIPLIER * sizeof(char));
+    uint64_t length = 0;
+    uint64_t size = REALLOC_MULTIPLIER;
+    for(uint32_t i = 0; i < g->board_width; i++) {
+        bool memory_ok;
+        for(uint32_t j = 0; j < g->board_height; j++) {
+            if(g->fields[i][j].owner_index == DEFAULT_PLAYER_NUMBER) {
+                memory_ok = add_character(map_string, DEFAULT_PLAYER_IDENTIFIER,
+                                          &length, &size);
+            }
+            else if(g->fields[i][j].owner_index < 10) {
+                memory_ok = add_character(map_string,
+                            digit_to_char(g->fields[i][j].owner_index),
+                            &length, &size);
+            }
+            else {
+                memory_ok = parse_multidigit_number(map_string,
+                                g->fields[i][j].owner_index, &length, &size);
+            }
+
+            if(!memory_ok) {
+                free(map_string);
+                return NULL;
+            }
+        }
+        memory_ok = add_character(map_string, '\n', &length, &size);
+        if(!memory_ok) {
+            free(map_string);
+            return NULL;
+        }
+    }
+
+    return map_string;
+}
