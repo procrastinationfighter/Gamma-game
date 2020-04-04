@@ -1,6 +1,50 @@
 #include "gamma_field.h"
 
 
+void field_queue_init(field_queue **q) {
+    *q = malloc(sizeof(field_queue));
+    (*q)->front = NULL;
+    (*q)->end = NULL;
+}
+
+void field_queue_push(field_queue *q, gamma_field *element) {
+    if(q != NULL) {
+        queue_element *el = malloc(sizeof(queue_element));
+        el->field = element;
+        el->next = NULL;
+        (q->end)->next = el;
+        q->end = el;
+    }
+}
+
+gamma_field* field_queue_pop(field_queue *q) {
+    if(q != NULL) {
+        gamma_field *el = (q->front)->field;
+        queue_element *temp = q->front;
+        (q->front) = temp->next;
+        free(temp);
+        if(q->front == NULL) {
+            q->end = NULL;
+        }
+        return el;
+    }
+    else {
+        return NULL;
+    }
+}
+
+bool field_queue_is_empty(field_queue *q) {
+    return q->front == NULL;
+}
+
+void field_queue_clear(field_queue **q) {
+    while(!field_queue_is_empty(*q)) {
+        field_queue_pop(*q);
+    }
+    free(*q);
+    *q = NULL;
+}
+
 gamma_field* find_root_field(gamma_field *field, gamma_field **board) {
     gamma_field *root = field;
     while(!is_field_root(root)) {
