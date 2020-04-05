@@ -12,7 +12,12 @@ void field_queue_push(field_queue *q, gamma_field *element) {
         queue_element *el = malloc(sizeof(queue_element));
         el->field = element;
         el->next = NULL;
-        (q->end)->next = el;
+        if(q->front == NULL) {
+            q->front = el;
+        }
+        else {
+            (q->end)->next = el;
+        }
         q->end = el;
     }
 }

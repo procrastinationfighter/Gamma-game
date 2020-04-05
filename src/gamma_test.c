@@ -88,6 +88,7 @@ int main() {
   assert(gamma_free_fields(g, 2) == 10);
 
   char *p = gamma_board(g);
+  printf("\n");
   assert(p);
   assert(strcmp(p, board) == 0);
   printf("%s", p);

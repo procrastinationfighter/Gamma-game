@@ -217,7 +217,7 @@ uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
     }
 
     if(y != 0 &&
-       board->fields[x+1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
+       board->fields[x][y-1].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x, y - 1)) {
         new_fields_count++;
     }
@@ -305,16 +305,15 @@ bool gamma_move(gamma_t *g, uint32_t player,
     }
     else {
         uint32_t united_fields = add_and_unite_field(g, player, x, y);
-        (curr_player->number_of_areas) -= united_fields + 1;
+        (curr_player->number_of_areas) -= united_fields;
+        (curr_player->number_of_areas) += 1;
         (curr_player->adjacent_fields)--;
     }
     g->fields[x][y].owner_index = player;
 
     update_other_players_adjacent_fields_after_move(g, player, x, y);
-
     return true;
 }
-
 
 bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
                                       uint32_t x, uint32_t y) {
@@ -513,14 +512,14 @@ bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
     bool was_removing_successful = remove_field_ownership(g, target_player, x, y);
     if(was_removing_successful) {
         gamma_move(g, player, x, y);
+        g->players[player - 1].has_golden_move_available = false;
         return true;
     }
     else { //Removing wasn't successful, so we have to recover state from before removing.
         gamma_move(g, target_player, x, y);
-        return true;
+        return false;
     }
 }
-
 
 uint64_t gamma_busy_fields(gamma_t *g, uint32_t player) {
     if(g == NULL || !is_player_parameter_valid(g, player)) {
@@ -530,7 +529,6 @@ uint64_t gamma_busy_fields(gamma_t *g, uint32_t player) {
         return g->players[player - 1].number_of_fields;
     }
 }
-
 
 uint64_t gamma_free_fields(gamma_t *g, uint32_t player) {
     if(g == NULL || !is_player_parameter_valid(g, player)) {
@@ -543,7 +541,6 @@ uint64_t gamma_free_fields(gamma_t *g, uint32_t player) {
         return g->players[player-1].adjacent_fields;
     }
 }
-
 
 bool gamma_golden_possible(gamma_t *g, uint32_t player) {
     if(g == NULL || !is_player_parameter_valid(g, player) ||
@@ -560,15 +557,14 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
     return false;
 }
 
-
 bool realloc_string(char *s, uint64_t *size) {
     *size = (REALLOC_MULTIPLIER * (*size));
     s = realloc(s, *size * sizeof(char));
     return (s == NULL);
 }
 
-
 bool add_character(char* s, char ch, uint64_t *length, uint64_t *size) {
+    printf("%c",ch);
     bool string_not_null = true;
     if(*length == *size) {
         string_not_null = realloc_string(s, size);
@@ -580,7 +576,6 @@ bool add_character(char* s, char ch, uint64_t *length, uint64_t *size) {
     (*length)++;
     return true;
 }
-
 
 uint32_t how_many_digits(uint32_t number) {
     uint32_t i = 1;
@@ -597,7 +592,6 @@ uint32_t how_many_digits(uint32_t number) {
 
     return i;
 }
-
 
 bool parse_multidigit_number(char* s, uint32_t number,
                              uint64_t *length, uint64_t *size) {
@@ -626,19 +620,17 @@ bool parse_multidigit_number(char* s, uint32_t number,
     return memory_ok;
 }
 
-
 char digit_to_char(uint32_t digit) {
-    return (char)(digit - (uint32_t) '0');
+    return (char)(digit + (uint32_t) '0');
 }
-
 
 char* gamma_board(gamma_t *g) {
     char *map_string = malloc(REALLOC_MULTIPLIER * sizeof(char));
     uint64_t length = 0;
     uint64_t size = REALLOC_MULTIPLIER;
-    for(uint32_t i = 0; i < g->board_width; i++) {
+    for(uint32_t j = g->board_height - 1; j >= 0; j++) {
         bool memory_ok;
-        for(uint32_t j = 0; j < g->board_height; j++) {
+        for(uint32_t i = 0; i < g->board_width; i++) {
             if(g->fields[i][j].owner_index == DEFAULT_PLAYER_NUMBER) {
                 memory_ok = add_character(map_string, DEFAULT_PLAYER_IDENTIFIER,
                                           &length, &size);
