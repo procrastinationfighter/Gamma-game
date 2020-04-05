@@ -1,7 +1,6 @@
 #include "gamma.h"
 
 #define DEFAULT_PLAYER_NUMBER 0
-#define REALLOC_MULTIPLIER 2
 #define DEFAULT_PLAYER_IDENTIFIER '.'
 
 bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
@@ -557,105 +556,71 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
     return false;
 }
 
-bool realloc_string(char *s, uint64_t *size) {
-    *size = (REALLOC_MULTIPLIER * (*size));
-    s = realloc(s, *size * sizeof(char));
-    return (s == NULL);
-}
-
-bool add_character(char* s, char ch, uint64_t *length, uint64_t *size) {
-    printf("%c",ch);
-    bool string_not_null = true;
-    if(*length == *size) {
-        string_not_null = realloc_string(s, size);
-    }
-    if(!string_not_null) {
-        return false;
-    }
-    s[*length] = ch;
-    (*length)++;
-    return true;
-}
-
-uint32_t how_many_digits(uint32_t number) {
-    uint32_t i = 1;
-    bool finished = false;
-    while(!finished) {
-        number /= 10;
-        if(number == 0) {
-            finished = true;
-        }
-        else {
-            i++;
-        }
-    }
-
-    return i;
-}
-
-bool parse_multidigit_number(char* s, uint32_t number,
-                             uint64_t *length, uint64_t *size) {
-    bool memory_ok = add_character(s, '[', length, size);
-    if(!memory_ok) {
-        return false;
-    }
-    uint32_t digit_count = how_many_digits(number);
-    char *number_string = malloc(digit_count * sizeof(char));
-    if(number_string == NULL) {
-        return false;
-    }
-    sprintf(number_string, "%d", number);
-
-    for(uint32_t i = 0; i < digit_count; i++) {
-        memory_ok = add_character(s, number_string[i], length, size);
-        if(!memory_ok) {
-            free(number_string);
-            return false;
-        }
-    }
-    free(number_string);
-
-    memory_ok = add_character(s, ']', length, size);
-
-    return memory_ok;
-}
-
 char digit_to_char(uint32_t digit) {
     return (char)(digit + (uint32_t) '0');
 }
 
+void parse_multidigit_number(char* s, uint32_t number, uint64_t *length) {
+    s[*length] = '[';
+    (*length)++;
+    uint32_t digits = (uint32_t) log10(number) + 1;
+    uint32_t divider = pow(10, digits - 1);
+    for(uint32_t i = 0; i < digits; i++) {
+        s[*length] = digit_to_char(number / divider);
+        number = number % divider;
+        divider /= 10;
+        (*length)++;
+    }
+    s[*length] = ']';
+}
+
+uint64_t how_many_characters_will_map_have(gamma_t *g) {
+    //One for every field + one column of '\n'
+    uint64_t size = ((uint64_t) g->board_height * (uint64_t)(g->board_width + 1));
+    //Every player with number above 9 will use:
+    // a pair of brackets and more than one digit
+    uint32_t next_limiter = 99;
+    uint32_t bonus_digits = 1;
+    for(uint32_t i = 9; i < g->players_count; i++) {
+        if(i == next_limiter) {
+            next_limiter = next_limiter * 10 + 9;
+            bonus_digits++;
+        }
+        size += g->players[i].number_of_fields * bonus_digits;
+    }
+    //One place for '\0'
+    size++;
+
+    return size;
+}
+
 char* gamma_board(gamma_t *g) {
-    char *map_string = malloc(REALLOC_MULTIPLIER * sizeof(char));
-    uint64_t length = 0;
-    uint64_t size = REALLOC_MULTIPLIER;
-    for(uint32_t j = g->board_height - 1; j >= 0; j++) {
-        bool memory_ok;
-        for(uint32_t i = 0; i < g->board_width; i++) {
-            if(g->fields[i][j].owner_index == DEFAULT_PLAYER_NUMBER) {
-                memory_ok = add_character(map_string, DEFAULT_PLAYER_IDENTIFIER,
-                                          &length, &size);
+    uint64_t array_size = how_many_characters_will_map_have(g);
+    char* map_string = malloc(array_size * sizeof(char));
+    uint64_t curr_index = 0;
+    if(map_string == NULL) {
+        return NULL;
+    }
+
+    for(uint32_t y = g->board_height; y > 0; y--) {
+        for(uint32_t x = 0; x < g->board_width; x++) {
+            uint32_t owner = g->fields[x][y - 1].owner_index;
+            if(owner > 9) {
+                parse_multidigit_number(map_string, owner, &curr_index);
             }
-            else if(g->fields[i][j].owner_index < 10) {
-                memory_ok = add_character(map_string,
-                            digit_to_char(g->fields[i][j].owner_index),
-                            &length, &size);
+            else if (owner == DEFAULT_PLAYER_NUMBER) {
+                map_string[curr_index] = DEFAULT_PLAYER_IDENTIFIER;
+                curr_index++;
             }
             else {
-                memory_ok = parse_multidigit_number(map_string,
-                                g->fields[i][j].owner_index, &length, &size);
-            }
-
-            if(!memory_ok) {
-                free(map_string);
-                return NULL;
+                map_string[curr_index] = digit_to_char(owner);
+                curr_index++;
             }
         }
-        memory_ok = add_character(map_string, '\n', &length, &size);
-        if(!memory_ok) {
-            free(map_string);
-            return NULL;
-        }
+        map_string[curr_index] = '\n';
+        curr_index++;
     }
+    map_string[curr_index] = '\0';
 
     return map_string;
 }

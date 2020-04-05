@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <malloc.h>
+#include <math.h>
 #include "gamma_field.h"
 
 /**

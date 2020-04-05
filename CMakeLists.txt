@@ -13,7 +13,7 @@ set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Ustawiamy wspólne opcje kompilowania dla wszystkich wariantów projektu.
-set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
+set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra -g")
 # Domyślne opcje dla wariantów Release i Debug są sensowne.
 # Jeśli to konieczne, ustawiamy tu inne.
 # set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
@@ -41,3 +41,6 @@ if (DOXYGEN_FOUND)
         COMMENT "Generating API documentation with Doxygen"
     )
 endif (DOXYGEN_FOUND)
+
+# Linkujemy bibliotekę math.h
+target_link_libraries(gamma m)
