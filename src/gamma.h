@@ -15,10 +15,7 @@
 /**
  * Struktura przechowująca stan gry.
  */
-struct gamma;
 typedef struct gamma gamma_t;
-
-
 
 /** @brief Tworzy strukturę przechowującą stan gry.
  * Alokuje pamięć na nową strukturę przechowującą stan gry.

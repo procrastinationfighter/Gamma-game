@@ -1,3 +1,11 @@
+/** @file
+ * Interfejs klasy przechowującej stan pola w grze gamma.
+ *
+ * @author Adam Boguszewski <ab417730@students.mimuw.edu.pl>
+ * @copyright Uniwersytet Warszawski
+ * @date 9.04.2020
+ */
+
 #ifndef GAMMA_GAMMA_FIELD_H
 #define GAMMA_GAMMA_FIELD_H
 

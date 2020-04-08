@@ -1,6 +1,15 @@
+/** @file
+ * Implementacja klasy przechowującej stan gry gamma
+ *
+ * @author Adam Boguszewski <ab417730@students.mimuw.edu.pl>
+ * @copyright Uniwersytet Warszawski
+ * @date 9.04.2020
+ */
+
 #include "gamma.h"
 #include <malloc.h>
 #include <math.h>
+#include <errno.h>
 #include "gamma_field.h"
 
 #define DEFAULT_PLAYER_NUMBER 0
@@ -31,7 +40,14 @@ struct gamma {
     uint64_t free_fields;
 };
 
-
+/** @brief Sprawdza, czy parametry funkcji @ref gamma_new są poprawne.
+ * Sprawdza, czy parametry @p width, @p height, @p players są niezerowe.
+ * @param[in] width         – szerokość planszy,
+ * @param[in] height        – wysokość planszy,
+ * @param[in] players       – ilość graczy.
+ * @return Wartość @p true, jeśli wszystkie parametry są większe od zera,
+ * lub false jeśli którykolwiek jest równy zero.
+ */
 bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
                                     uint32_t players) {
     if(width == 0 || height == 0 || players == 0) {
@@ -42,6 +58,12 @@ bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
     }
 }
 
+/** @brief Zwalnia zaalokowaną pamięć w dwuwymiarowej tablicy gamma_field.
+ * Zwalnia pamięć zaalokowaną na pierwsze @p columns_count wskaźników w tablicy
+ * @p fields oraz zwalnia pamięć zaalokowaną na wskaźnik @p fields.
+ * @param[in] fields         – dwuwymiarowa tablica zmiennych typu gamma_field
+ * @param[in] columns_count  – liczba zaalokowanych wskaźników w tablicy fields.
+ */
 void free_board(gamma_field **fields, uint32_t columns_count){
     for(uint32_t i = 0; i < columns_count; i++) {
         free(fields[i]);
@@ -49,6 +71,12 @@ void free_board(gamma_field **fields, uint32_t columns_count){
     free(fields);
 }
 
+/** @brief Zwalnia zaalokowaną pamięć w dwuwymiarowej tablicy gamma_field.
+ * Zwalnia pamięć zaalokowaną na pierwsze @p columns_count wskaźników w tablicy
+ * @p map oraz zwalnia pamięć zaalokowaną na wskaźnik @p map.
+ * @param[in] map            – tablica "odwiedzonych" przez algorytm BFS pól,
+ * @param[in] columns_count  – liczba zaalokowanych wskaźników w tablicy map.
+ */
 void free_visited_map(bool **map, uint32_t columns_count) {
     for(uint32_t i = 0; i < columns_count; i++) {
         free(map[i]);
@@ -56,6 +84,16 @@ void free_visited_map(bool **map, uint32_t columns_count) {
     free(map);
 }
 
+/** @brief Alokuje pamięć potrzebną do przechowywania danych o polach.
+ * Alokuje pamięć potrzebną do przechowywania danych o polach w składowej fields
+ * zmiennej @p board i ustawia domyślne wartości każdego z pól. W przypadku
+ * niepowodzenia, zwalnia dotychczas zaalokowaną w tej funkcji pamięć.
+ * @param[in,out] board      – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] width          – szerokość planszy, liczba dodatnia,
+ * @param[in] height         – wysokość planszy, liczba dodatnia.
+ * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
+ * wypadku.
+ */
 bool allocate_board(gamma_t *board, uint32_t width, uint32_t height) {
     board->fields = malloc(width * sizeof(gamma_field*));
     if(board->fields == NULL) {
@@ -82,6 +120,13 @@ bool allocate_board(gamma_t *board, uint32_t width, uint32_t height) {
     return true;
 }
 
+/** @brief Alokuje pamięć potrzebną do przechowywania danych o graczach.
+ * Alokuje tablicę rozmiaru @p players w składowej players zmiennej @p board.
+ * @param[in,out] board      – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] players        – liczba graczy, wartość dodatnia.
+ * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
+ * wypadku.
+ */
 bool allocate_players(gamma_t *board, uint32_t players) {
     board->players = malloc(players * sizeof(player_t));
     if(board->players == NULL) {
@@ -98,6 +143,13 @@ bool allocate_players(gamma_t *board, uint32_t players) {
     return true;
 }
 
+/** @brief Alokuje pamięć potrzebną do przechowywania mapy odwiedzonych pól.
+ * Alokuje dwuwymiarową tablicę w składowej map zmiennej @p board. Tablica
+ * ma wymiary @p board_width i @p board_height będące składowymi zmiennej @p board.
+ * @param[in,out] board      – wskaźnik na strukturę przechowującą dane gry,.
+ * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
+ * wypadku.
+ */
 bool allocate_visited_map(gamma_t *board) {
     board->visited_fields_board = malloc(board->board_width * sizeof(bool*));
     if(board->visited_fields_board == NULL) {
@@ -119,6 +171,11 @@ bool allocate_visited_map(gamma_t *board) {
     return true;
 }
 
+/** @brief Ustawia wszystkie wartości mapy odwiedzonych pól na @p false.
+ * Ustawia wszystkie pola dwuwymiarowej tablicy @p map, będącej składową
+ * zmiennej @p board na @p false.
+ * @param[in,out] board      – wskaźnik na strukturę przechowującą dane gry,
+ */
 void reset_visited_map(gamma_t *board) {
     for(uint32_t i = 0; i < board->board_width; i++) {
         for(uint32_t j = 0; j < board->board_height; j++) {
@@ -127,11 +184,21 @@ void reset_visited_map(gamma_t *board) {
     }
 }
 
+/** @brief Alokuje pamięć potrzebną do przechowywania tablic w zmiennej @p board.
+ * Alokuje pamięć do składowych @p players, @p fields i @p map zmiennej @p board.
+ * W przypadku niepowodzenia, zwalnia całą zaalokowaną w zmiennej @p board pamięć
+ * i ustawia wartość @p errno na ENOMEM.
+ * @param[in,out] board      – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] players        – liczba graczy, wartość dodatnia.
+ * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
+ * wypadku.
+ */
 gamma_t* allocate_board_arrays(gamma_t* board, uint32_t width,
                                uint32_t height, uint32_t players) {
     bool was_creating_successful = allocate_board(board, width, height);
     if(!was_creating_successful) {
         free(board);
+        errno = ENOMEM;
         return NULL;
     }
 
@@ -139,6 +206,7 @@ gamma_t* allocate_board_arrays(gamma_t* board, uint32_t width,
     if(!was_creating_successful) {
         free_board(board->fields, width);
         free(board);
+        errno = ENOMEM;
         return NULL;
     }
 
@@ -147,12 +215,24 @@ gamma_t* allocate_board_arrays(gamma_t* board, uint32_t width,
         free_board(board->fields, width);
         free_visited_map(board->visited_fields_board, width);
         free(board);
+        errno = ENOMEM;
         return NULL;
     }
 
     return board;
 }
 
+/** @brief Tworzy strukturę przechowującą stan gry.
+ * Alokuje pamięć na nową strukturę przechowującą stan gry.
+ * Inicjuje tę strukturę tak, aby reprezentowała początkowy stan gry.
+ * @param[in] width   – szerokość planszy, liczba dodatnia,
+ * @param[in] height  – wysokość planszy, liczba dodatnia,
+ * @param[in] players – liczba graczy, liczba dodatnia,
+ * @param[in] areas   – maksymalna liczba obszarów,
+ *                      jakie może zająć jeden gracz.
+ * @return Wskaźnik na utworzoną strukturę lub NULL, gdy nie udało się
+ * zaalokować pamięci lub któryś z parametrów jest niepoprawny.
+ */
 gamma_t* gamma_new(uint32_t width, uint32_t height,
                    uint32_t players, uint32_t areas) {
     if(!are_gamma_new_parameters_valid(width, height, players)) {
@@ -161,6 +241,7 @@ gamma_t* gamma_new(uint32_t width, uint32_t height,
 
     gamma_t *new_board = malloc(sizeof(gamma_t));
     if(new_board == NULL) {
+        errno = ENOMEM;
         return NULL;
     }
 
@@ -175,6 +256,11 @@ gamma_t* gamma_new(uint32_t width, uint32_t height,
     return new_board;
 }
 
+/** @brief Usuwa strukturę przechowującą stan gry.
+* Usuwa z pamięci strukturę wskazywaną przez @p g.
+* Nic nie robi, jeśli wskaźnik ten ma wartość NULL.
+* @param[in] g       – wskaźnik na usuwaną strukturę.
+*/
 void gamma_delete(gamma_t *g) {
     if(g != NULL) {
         free_board(g->fields, g->board_width);
@@ -184,6 +270,14 @@ void gamma_delete(gamma_t *g) {
     }
 }
 
+/** @brief Sprawdza, czy parametr @p player jest poprawny.
+ * Sprawdza, czy parametr @p player jest różny od zera
+ * i niewiększy od wartości @p players_count ze zmiennej @p g.
+ * @param[in] g      – wskaźnik na strukturę przechowującą dane gry.
+ * @param[in] player – indeks gracza.
+ * @return Wartość @p true, jeśli parametr znajduje się w podanym zakresie
+ * lub @p false w przeciwnym wypadku.
+ */
 bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
     if(player == 0 || player > g->players_count) {
         return false;
@@ -193,6 +287,18 @@ bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
     }
 }
 
+/** @brief Sprawdza, czy parametry funkcji @ref gamma_move są prawidłowe.
+ * Sprawdza, czy parametry @p player, @p x i @p y funkcji @ref gamma_move
+ * mieszczą się w zakresach wyznaczanych przez składowe zmiennej @p board,
+ * odpowiednio @p players_count, @p board_width i @p board_height.
+ * @param[in] g      – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player – indeks gracza, liczba dodatnia
+ *                     i niewiększa od składowej @p players_count,
+ * @param[in] x      – numer kolumny, mniejszy od składowej @p board_width,
+ * @param[in] y      – numer wiersza, mniejszy od składowej @p board_height
+ * @return Wartość @p true, jeśli parametry znajduje się we właściwych zakresacj
+ * lub @p false w przeciwnym wypadku.
+ */
 bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
                                      uint32_t x, uint32_t y) {
     if(x < g->board_width && y < g->board_height && is_player_parameter_valid(g, player)) {
@@ -203,6 +309,23 @@ bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
     }
 }
 
+/** @brief Sprawdza, czy dany gracz jest w posiadaniu pól sąsiednich do (@p x, @p y).
+ * Sprawdza, czy którekolwiek z pól o współrzędnych
+ * (@p x + 1, @p y), (@p x - 1, @p y), (@p x, @p y + 1), (@p x, @p y - 1)
+ * ma wartość @p owner_index równą @p player.
+ * Jeśli powyższe pola nie istnieją, nie zostają sprawdzane.
+ * @param[in] board  – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player – indeks gracza, liczba dodatnia
+ *                     i niewiększa od składowej @p players
+ *                     ze zmiennej @p board
+ * @param[in] x      – numer kolumny, mniejszy od składowej
+ *                     @p board_width ze zmiennej @p board,
+ * @param[in] y      – numer wiersza, mniejszy od składowej
+ *                     @p board_height ze zmiennej @p board.
+ * @return Wartość @p true jeśli którekolwiek z wymienionych pól
+ *         należy do danego gracza lub wartość @p false w przeciwnym
+ *         przypadku.
+ */
 bool does_player_own_adjacent_fields(gamma_t *board, uint32_t player,
                                      uint32_t x, uint32_t y) {
     //Checking whether player owns any fields adjacent to the one he wants to capture.
@@ -221,7 +344,22 @@ bool does_player_own_adjacent_fields(gamma_t *board, uint32_t player,
 
     return false;
 }
-
+/** @brief Wylicza, ile nowych pól sąsiaduje z graczem po wykonaniu ruchu.
+ * Sprawdza, pól sąsiadujących z polem o współrzędnych (@p x, @p y)
+ * nie sąsiaduje z innymi polami należącymi do danego gracza.
+ * Przekazuje ilość tych pól.
+ * @param[in] board  – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player – indeks gracza, liczba dodatnia
+ *                     i niewiększa od składowej @p players
+ *                     ze zmiennej @p board
+ * @param[in] x      – numer kolumny, mniejszy od składowej
+ *                     @p board_width ze zmiennej @p board,
+ * @param[in] y      – numer wiersza, mniejszy od składowej
+ *                     @p board_height ze zmiennej @p board.
+ * @return Liczba w zakresie od 0 do 4 włącznie, oznaczająca
+ *         ilość nowych pól sąsiednich do wszystkich pól gracza
+ *         @p player.
+ */
 uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
                                         uint32_t x, uint32_t y) {
     uint32_t new_fields_count = 0;
@@ -253,7 +391,21 @@ uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
     return new_fields_count;
 }
 
-//Returns number of different sets that were combined by unification
+/** @brief Łączy pole i sąsiadujące, należące do tego samego gracza pola.
+ * Łączy singleton pola o współrzędnych (@p x, @p y) ze zbiorami, do których
+ * należą pola (@p x + 1, @p y), (@p x - 1, @p y), (@p x, @p y + 1), (@p x, @p y - 1),
+ * pod warunkiem że te pola należą do gracza @p player.
+ * @param[in, out] board  – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player      – indeks gracza, liczba dodatnia
+ *                          i niewiększa od składowej @p players
+ *                          ze zmiennej @p board
+ * @param[in] x           – numer kolumny, mniejszy od składowej
+ *                          @p board_width ze zmiennej @p board,
+ * @param[in] y           – numer wiersza, mniejszy od składowej
+ *                          @p board_height ze zmiennej @p board.
+ * @return Liczba w zakresie od 0 do 4 włącznie, oznaczająca liczbę różnych
+ * zbiorów, które zostały połączone.
+ */
 __uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
                          uint32_t x, uint32_t y) {
     uint32_t united_sets = 0;
@@ -284,11 +436,33 @@ __uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
     return united_sets;
 }
 
+/** @brief Sprawdza, czy dane pole należy do innego gracza.
+ * Sprawdza, czy wartość @p owner_index w zmiennej @p field
+ * jest różna od domyślnej i od wartości @p player.
+ * @param[in] field      – wskaźnik na strukturę przechowującą dane pola,
+ * @param[in] player     – indeks gracza, liczba dodatnia
+ *                         i niewiększa od składowej @p players
+ *                         ze zmiennej @p board.
+ * @return Wartość @p true jeśli pole należy do innego gracza
+ *         lub wartość @p false w przeciwnym wypadku.
+ */
 bool does_field_belong_to_other_player(gamma_field *field, uint32_t player) {
     return (field->owner_index != DEFAULT_PLAYER_NUMBER &&
             field->owner_index != player);
 }
 
+/** @brief Sprawdza, czy dany gracz został już uwzględniony przy aktualizacji.
+ * Sprawdza, czy indeks @p player znajduje się w tablicy @p players o wielkości
+ * @p players_count.
+ * @param[in] player        – indeks gracza, liczba dodatnia
+ *                            i niewiększa od składowej @p players
+ *                            ze zmiennej @p board.
+ * @param[in] players       – tablica przechowująca indeksy graczy, którzy
+ *                            zostali już uwzględnieni.
+ * @param[in] players_count – ilość indeksów w tablicy @p players.
+ * @return Wartość @p true jeśli gracz już został uzwględniony lub
+ *         wartość @p false jeśli nie został uwzględniony.
+ */
 bool was_player_adjacent_already_updated(uint32_t player, const uint32_t *players,
                                          uint32_t players_count) {
     for(uint32_t i = 0; i < players_count; i++) {
@@ -299,6 +473,20 @@ bool was_player_adjacent_already_updated(uint32_t player, const uint32_t *player
     return false;
 }
 
+/** @brief Po ruchu, aktualizuje liczbę pól sąsiadnich innych graczy.
+ * Sprawdza, czy pola sąsiednie do pola o współrzędnych (@p x, @p y)
+ * należą do innego gracza, niż tego o indeksie @p player. Jeśli tak,
+ * aktualizuje dla każdego danego gracza całkowitą ilość pól sąsiadujących
+ * z jego polami.
+ * @param[in, out] board      – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player              – indeks gracza, liczba dodatnia
+ *                              i niewiększa od składowej @p players
+ *                              ze zmiennej @p board,
+ * @param[in] x                   – numer kolumny, mniejszy od składowej
+ *                               @p board_width ze zmiennej @p board,
+ * @param[in] y                   – numer wiersza, mniejszy od składowej
+ *                              @p board_height ze zmiennej @p board.
+ */
 void update_other_players_adjacent_fields_after_move(gamma_t *g, uint32_t player,
                                                      uint32_t x, uint32_t y) {
     uint32_t players_checked[3];
@@ -335,7 +523,18 @@ void update_other_players_adjacent_fields_after_move(gamma_t *g, uint32_t player
         (g->players[g->fields[x][y - 1].owner_index - 1].adjacent_fields)--;
     }
 }
-
+/** @brief Wykonuje ruch.
+ * Ustawia pionek gracza @p player na polu (@p x, @p y).
+ * @param[in,out] g   – wskaźnik na strukturę przechowującą stan gry,
+ * @param[in] player  – numer gracza, liczba dodatnia niewiększa od wartości
+ *                      @p players z funkcji @ref gamma_new,
+ * @param[in] x       – numer kolumny, liczba nieujemna mniejsza od wartości
+ *                      @p width z funkcji @ref gamma_new,
+ * @param[in] y       – numer wiersza, liczba nieujemna mniejsza od wartości
+ *                      @p height z funkcji @ref gamma_new.
+ * @return Wartość @p true, jeśli ruch został wykonany, a @p false,
+ * gdy ruch jest nielegalny lub któryś z parametrów jest niepoprawny.
+ */
 bool gamma_move(gamma_t *g, uint32_t player,
                 uint32_t x, uint32_t y) {
     if(!are_gamma_move_parameters_valid(g, player, x, y) ||
@@ -368,6 +567,20 @@ bool gamma_move(gamma_t *g, uint32_t player,
     return true;
 }
 
+/** @brief Sprawdza, czy parametry funkcji @ref golden_move śa prawidłowe.
+ * Sprawdza, czy parametry @p player, @p x i @p y mieszczą się w zakresach
+ * ustalanych przez składowe zmiennej @p board, odpowiednio @p players_count,
+ * @p board_width i @p board_height.
+ * @param[in] g          – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player     – indeks gracza, liczba dodatnia
+ *                         i niewiększa od składowej @p players
+ *                         ze zmiennej @p g,
+ * @param[in] x          – numer kolumny, mniejszy od składowej
+ *                         @p board_width ze zmiennej @p g,
+ * @param[in] y          – numer wiersza, mniejszy od składowej
+ *                         @p board_height ze zmiennej @p g.
+ * @return
+ */
 bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
                                       uint32_t x, uint32_t y) {
     if(x >= g->board_width || y >= g->board_height) {
@@ -380,6 +593,20 @@ bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
             field_owner != player);
 }
 
+/** @brief Ustawia sąsiednie pola należące do gracza jako korzenie w ramach find and union.
+ * Jeśli pola (@p x + 1, @p y), (@p x - 1, @p y), (@p x, @p y + 1), (@p x, @p y - 1)
+ * należą do gracza @p player, zostają ustanowione jako korzenie w ramach algorytmu
+ * find and union. Jest to przygotowanie do przejścia planszy za pomocą
+ * algorytmu BFS.
+ * @param[in, out] g     – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player     – indeks gracza, liczba dodatnia
+ *                         i niewiększa od składowej @p players
+ *                         ze zmiennej @p g,
+ * @param[in] x          – numer kolumny, mniejszy od składowej
+ *                         @p board_width ze zmiennej @p g,
+ * @param[in] y          – numer wiersza, mniejszy od składowej
+ *                         @p board_height ze zmiennej @p g.
+ */
 void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
                                  uint32_t x, uint32_t y) {
     if(x + 1 != g->board_width && g->fields[x + 1][y].owner_index == player) {
@@ -403,11 +630,32 @@ void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
     }
 }
 
+/** @brief Sprawdza, czy dane pole powinno zostać odwiedzone podczas przechodzenia planszy.
+ * Sprawdza, czy dane pole spełnia następujące warunki:
+ * nie zostało jeszcze odwiedzone,
+ * należy do danego gracza.
+ * @param[in] field       – wskaźnik na strukturę przechowującą dane pola,
+ * @param[in] player      – indeks gracza, liczba dodatnia,
+ * @param[in] visited_map – dwuwymiarowa tablica przechowująca informacje
+ *                          o tym, czy pola zostały już odwiedzone.
+ * @return Wartosć @p true jeśli pole spełnia powyższe warunki
+ *         lub wartość @p false, jeśli ich nie spełnia.
+ */
 bool should_field_be_visited(gamma_field *field, uint32_t player,
                              bool **visited_map) {
     return (field->owner_index == player && !visited_map[field->this_x][field->this_y]);
 }
 
+/** @brief Dodaje do kolejki sąsiednie pola w ramach algorytmu BFS.
+ * Dodaje do kolejki @p queue pola o współrzędnych
+ * (@p field->this_x + 1, @p field->this_y), (@p field->this_x - 1, @p field->this_y),
+ * (@p field->this_x, @p field->this_y + 1), (@p field->this_x, @p field->this_y - 1),
+ * jeśli nie zostały one odwiedzone i należą do gracza o indeksie @p field->owner_index.
+ * @param queue[in, out] – wskaźnik na strukturę reprezentującą kolejkę
+ *                         danych typu gamma_field,
+ * @param g[in]          – wskaźnik na strukturę przechowującą dane gry,
+ * @param field[in]      – wskaźnik na strukturę przechowującą dane pola,
+ */
 void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
                                   gamma_field *field) {
     uint32_t curr_x = field->this_x;
@@ -442,8 +690,17 @@ void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
     }
 }
 
-//Main BFS function
-void update_area(gamma_t *g, uint32_t x, uint32_t y) {
+/** @brief Ustawia dane pole jako korzeń swojego zbioru w ramach find and union.
+ * Korzystając z algorytmu BFS, ustawia współrzędne korzenia wszystkich elementów
+ * zbioru na (@p x, @p y). Aktualizowany zbiór jest zbiorem, do którego należy
+ * pole o współrzędnych (@p x, @p y).
+ * @param[in, out] g     – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] x          – numer kolumny, mniejszy od składowej
+ *                         @p board_width ze zmiennej @p g,
+ * @param[in] y          – numer wiersza, mniejszy od składowej
+ *                         @p board_height ze zmiennej @p g.
+ */
+void set_field_as_set_root(gamma_t *g, uint32_t x, uint32_t y) {
     field_queue *queue;
     field_queue_init(&queue);
     field_queue_push(queue, &g->fields[x][y]);
@@ -466,27 +723,27 @@ void update_area(gamma_t *g, uint32_t x, uint32_t y) {
 int update_areas_after_removal(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
     int areas_count = 0;
     if(x + 1 < g->board_width && g->fields[x + 1][y].owner_index == player) {
-        update_area(g, x + 1, y);
+        set_field_as_set_root(g, x + 1, y);
         areas_count++;
     }
 
     if(x > 0 && g->fields[x - 1][y].owner_index == player) {
         if (is_field_root(&g->fields[x - 1][y])){
-            update_area(g, x - 1, y);
+            set_field_as_set_root(g, x - 1, y);
             areas_count++;
         }
     }
 
     if(y + 1 < g->board_height && g->fields[x][y + 1].owner_index == player) {
         if (is_field_root(&g->fields[x][y + 1])){
-            update_area(g, x, y + 1);
+            set_field_as_set_root(g, x, y + 1);
             areas_count++;
         }
     }
 
     if(y > 0 && g->fields[x][y - 1].owner_index == player) {
         if (is_field_root(&g->fields[x][y - 1])){
-            update_area(g, x, y - 1);
+            set_field_as_set_root(g, x, y - 1);
             areas_count++;
         }
     }

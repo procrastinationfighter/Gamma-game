@@ -1,3 +1,11 @@
+/** @file
+ * Implementacja klasy przechowującej stan pola w grze gamma.
+ *
+ * @author Adam Boguszewski <ab417730@students.mimuw.edu.pl>
+ * @copyright Uniwersytet Warszawski
+ * @date 9.04.2020
+ */
+
 #include "gamma_field.h"
 
 
