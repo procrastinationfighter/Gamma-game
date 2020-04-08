@@ -1,9 +1,35 @@
 #include "gamma.h"
 #include <malloc.h>
 #include <math.h>
+#include "gamma_field.h"
 
 #define DEFAULT_PLAYER_NUMBER 0
 #define DEFAULT_PLAYER_IDENTIFIER '.'
+
+/**
+ * Struktura przechowująca dane o jednym graczu.
+ */
+struct player{
+    uint32_t number_of_areas;
+    uint32_t number_of_fields;
+    uint32_t adjacent_fields;
+    bool has_golden_move_available;
+};
+typedef struct player player_t;
+
+/**
+ * Struktura przechowująca stan gry.
+ */
+struct gamma {
+    player_t *players;
+    gamma_field **fields;
+    bool **visited_fields_board;
+    uint32_t board_width;
+    uint32_t board_height;
+    uint32_t max_areas;
+    uint32_t players_count;
+    uint64_t free_fields;
+};
 
 
 bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
@@ -451,7 +477,7 @@ int update_areas_after_removal(gamma_t *g, uint32_t player, uint32_t x, uint32_t
         }
     }
 
-    if(y + 1 < g->board_width && g->fields[x][y + 1].owner_index == player) {
+    if(y + 1 < g->board_height && g->fields[x][y + 1].owner_index == player) {
         if (is_field_root(&g->fields[x][y + 1])){
             update_area(g, x, y + 1);
             areas_count++;
@@ -470,23 +496,37 @@ int update_areas_after_removal(gamma_t *g, uint32_t player, uint32_t x, uint32_t
 
 void update_other_players_adjacent_fields_after_removing(gamma_t *g,
                             uint32_t player, uint32_t x, uint32_t y) {
+    uint32_t players_checked[3];
+    uint32_t players_count = 0;
     if(x + 1 != g->board_width &&
        does_field_belong_to_other_player(&g->fields[x + 1][y], player)) {
         (g->players[g->fields[x + 1][y].owner_index - 1].adjacent_fields)++;
+        players_checked[players_count] = g->fields[x + 1][y].owner_index;
+        players_count++;
     }
 
     if(x != 0 &&
-       does_field_belong_to_other_player(&g->fields[x - 1][y], player)) {
+       does_field_belong_to_other_player(&g->fields[x - 1][y], player) &&
+       !was_player_adjacent_already_updated(g->fields[x - 1][y].owner_index,
+                                            players_checked, players_count)) {
         (g->players[g->fields[x - 1][y].owner_index - 1].adjacent_fields)++;
+        players_checked[players_count] = g->fields[x - 1][y].owner_index;
+        players_count++;
     }
 
     if(y + 1 != g->board_height &&
-       does_field_belong_to_other_player(&g->fields[x][y + 1], player)) {
+       does_field_belong_to_other_player(&g->fields[x][y + 1], player) &&
+       !was_player_adjacent_already_updated(g->fields[x][y + 1].owner_index,
+                                            players_checked, players_count)) {
         (g->players[g->fields[x][y + 1].owner_index - 1].adjacent_fields)++;
+        players_checked[players_count] = g->fields[x][y + 1].owner_index;
+        players_count++;
     }
 
     if(y != 0 &&
-       does_field_belong_to_other_player(&g->fields[x][y - 1], player)) {
+       does_field_belong_to_other_player(&g->fields[x][y - 1], player) &&
+       !was_player_adjacent_already_updated(g->fields[x][y - 1].owner_index,
+                                              players_checked, players_count)) {
         (g->players[g->fields[x][y - 1].owner_index - 1].adjacent_fields)++;
     }
 }
