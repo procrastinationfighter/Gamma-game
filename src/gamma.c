@@ -1,7 +1,10 @@
 #include "gamma.h"
+#include <malloc.h>
+#include <math.h>
 
 #define DEFAULT_PLAYER_NUMBER 0
 #define DEFAULT_PLAYER_IDENTIFIER '.'
+
 
 bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
                                     uint32_t players) {
@@ -177,16 +180,16 @@ bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
 bool does_player_own_adjacent_fields(gamma_t *board, uint32_t player,
                                      uint32_t x, uint32_t y) {
     //Checking whether player owns any fields adjacent to the one he wants to capture.
-    if(x + 1 != board->board_width && board->fields[x+1][y].owner_index == player) {
+    if(x + 1 < board->board_width && board->fields[x+1][y].owner_index == player) {
         return true;
     }
-    if(x != 0 && board->fields[x-1][y].owner_index == player) {
+    if(x > 0 && board->fields[x-1][y].owner_index == player) {
         return true;
     }
-    if(y + 1 != board->board_height && board->fields[x][y+1].owner_index == player) {
+    if(y + 1 < board->board_height && board->fields[x][y+1].owner_index == player) {
         return true;
     }
-    if(y != 0 && board->fields[x][y-1].owner_index == player) {
+    if(y > 0 && board->fields[x][y-1].owner_index == player) {
         return true;
     }
 
@@ -197,25 +200,25 @@ uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
                                         uint32_t x, uint32_t y) {
     uint32_t new_fields_count = 0;
 
-    if(x + 1 != board->board_width &&
+    if(x + 1 < board->board_width &&
        board->fields[x+1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x + 1, y)) {
         new_fields_count++;
     }
 
-    if(x != 0 &&
+    if(x > 0 &&
        board->fields[x-1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x - 1, y)) {
         new_fields_count++;
     }
 
-    if(y + 1 != board->board_height &&
+    if(y + 1 < board->board_height &&
        board->fields[x][y+1].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x, y + 1)) {
         new_fields_count++;
     }
 
-    if(y != 0 &&
+    if(y > 0 &&
        board->fields[x][y-1].owner_index == DEFAULT_PLAYER_NUMBER &&
        !does_player_own_adjacent_fields(board, player, x, y - 1)) {
         new_fields_count++;
@@ -228,25 +231,25 @@ uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
 __uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
                          uint32_t x, uint32_t y) {
     uint32_t united_sets = 0;
-    if(x + 1 != g->board_width && g->fields[x+1][y].owner_index == player) {
+    if(x + 1 < g->board_width && g->fields[x+1][y].owner_index == player) {
         if(unite_fields(&g->fields[x][y], &g->fields[x+1][y], g->fields)) {
             united_sets++;
         }
     }
 
-    if(x != 0 && g->fields[x-1][y].owner_index == player) {
+    if(x > 0 && g->fields[x-1][y].owner_index == player) {
         if(unite_fields(&g->fields[x][y], &g->fields[x-1][y], g->fields)) {
             united_sets++;
         }
     }
 
-    if(y + 1 != g->board_height && g->fields[x][y+1].owner_index == player) {
+    if(y + 1 < g->board_height && g->fields[x][y+1].owner_index == player) {
         if(unite_fields(&g->fields[x][y], &g->fields[x][y+1], g->fields)) {
             united_sets++;
         }
     }
 
-    if(y != 0 && g->fields[x][y-1].owner_index == player) {
+    if(y > 0 && g->fields[x][y-1].owner_index == player) {
         if(unite_fields(&g->fields[x][y], &g->fields[x][y-1], g->fields)) {
             united_sets++;
         }
@@ -256,28 +259,53 @@ __uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
 }
 
 bool does_field_belong_to_other_player(gamma_field *field, uint32_t player) {
-    return (field->owner_index != DEFAULT_PLAYER_NUMBER && field->owner_index != player);
+    return (field->owner_index != DEFAULT_PLAYER_NUMBER &&
+            field->owner_index != player);
+}
+
+bool was_player_adjacent_already_updated(uint32_t player, const uint32_t *players,
+                                         uint32_t players_count) {
+    for(uint32_t i = 0; i < players_count; i++) {
+        if(players[i] == player) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void update_other_players_adjacent_fields_after_move(gamma_t *g, uint32_t player,
                                                      uint32_t x, uint32_t y) {
-    if(x + 1 != g->board_width &&
+    uint32_t players_checked[3];
+    uint32_t players_count = 0;
+    if(x + 1 < g->board_width &&
        does_field_belong_to_other_player(&g->fields[x + 1][y], player)) {
         (g->players[g->fields[x + 1][y].owner_index - 1].adjacent_fields)--;
+        players_checked[players_count] = g->fields[x + 1][y].owner_index;
+        players_count++;
     }
 
-    if(x != 0 &&
-       does_field_belong_to_other_player(&g->fields[x - 1][y], player)) {
+    if(x > 0 &&
+       does_field_belong_to_other_player(&g->fields[x - 1][y], player) &&
+       !was_player_adjacent_already_updated(g->fields[x - 1][y].owner_index,
+                                            players_checked, players_count)) {
         (g->players[g->fields[x - 1][y].owner_index - 1].adjacent_fields)--;
+        players_checked[players_count] = g->fields[x - 1][y].owner_index;
+        players_count++;
     }
 
-    if(y + 1 != g->board_height &&
-       does_field_belong_to_other_player(&g->fields[x][y + 1], player)) {
+    if(y + 1 < g->board_height &&
+       does_field_belong_to_other_player(&g->fields[x][y + 1], player)&&
+       !was_player_adjacent_already_updated(g->fields[x][y + 1].owner_index,
+                                            players_checked, players_count)) {
         (g->players[g->fields[x][y + 1].owner_index - 1].adjacent_fields)--;
+        players_checked[players_count] = g->fields[x][y + 1].owner_index;
+        players_count++;
     }
 
-    if(y != 0 &&
-       does_field_belong_to_other_player(&g->fields[x][y - 1], player)) {
+    if(y > 0 &&
+       does_field_belong_to_other_player(&g->fields[x][y - 1], player)&&
+       !was_player_adjacent_already_updated(g->fields[x][y - 1].owner_index,
+                                            players_checked, players_count)) {
         (g->players[g->fields[x][y - 1].owner_index - 1].adjacent_fields)--;
     }
 }
@@ -411,26 +439,26 @@ void update_area(gamma_t *g, uint32_t x, uint32_t y) {
 //Returns number of these areas - 0 if field was alone, at least 1 otherwise.
 int update_areas_after_removal(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
     int areas_count = 0;
-    if(x + 1 != g->board_width && g->fields[x + 1][y].owner_index == player) {
+    if(x + 1 < g->board_width && g->fields[x + 1][y].owner_index == player) {
         update_area(g, x + 1, y);
         areas_count++;
     }
 
-    if(x != 0 && g->fields[x - 1][y].owner_index == player) {
+    if(x > 0 && g->fields[x - 1][y].owner_index == player) {
         if (is_field_root(&g->fields[x - 1][y])){
             update_area(g, x - 1, y);
             areas_count++;
         }
     }
 
-    if(y + 1 != g->board_width && g->fields[x][y + 1].owner_index == player) {
+    if(y + 1 < g->board_width && g->fields[x][y + 1].owner_index == player) {
         if (is_field_root(&g->fields[x][y + 1])){
             update_area(g, x, y + 1);
             areas_count++;
         }
     }
 
-    if(y != 0 && g->fields[x][y - 1].owner_index == player) {
+    if(y > 0 && g->fields[x][y - 1].owner_index == player) {
         if (is_field_root(&g->fields[x][y - 1])){
             update_area(g, x, y - 1);
             areas_count++;
@@ -503,7 +531,7 @@ bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
     //Wrong parameters or moving player here would be illegal
     if(!are_golden_move_parameters_valid(g, player, x, y) ||
       (g->players[player - 1].number_of_areas == g->max_areas &&
-             does_player_own_adjacent_fields(g, player, x, y))) {
+             !does_player_own_adjacent_fields(g, player, x, y))) {
         return false;
     }
 
