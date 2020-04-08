@@ -438,7 +438,7 @@ void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
        should_field_be_visited(&g->fields[curr_x][curr_y - 1],
                                field->owner_index, g->visited_fields_board)) {
         field_queue_push(queue, &g->fields[curr_x][curr_y - 1]);
-        g->visited_fields_board[curr_x + 1][curr_y] = true;
+        g->visited_fields_board[curr_x][curr_y - 1] = true;
     }
 }
 
