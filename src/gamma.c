@@ -1028,6 +1028,7 @@ void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) {
         (*length)++;
     }
     s[*length] = ']';
+    (*length)++;
 }
 
 /** @brief Oblicza rozmiar tablicy znaków do wypisania.
