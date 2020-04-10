@@ -306,7 +306,7 @@ bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
  */
 bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
                                      uint32_t x, uint32_t y) {
-    if (x < g->board_width && y < g->board_height &&
+    if (g != NULL && x < g->board_width && y < g->board_height &&
         is_player_parameter_valid(g, player)) {
         return true;
     }
@@ -590,7 +590,7 @@ bool gamma_move(gamma_t *g, uint32_t player,
  */
 bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
                                       uint32_t x, uint32_t y) {
-    if (x >= g->board_width || y >= g->board_height) {
+    if (g == NULL || x >= g->board_width || y >= g->board_height) {
         return false;
     }
 
@@ -1046,13 +1046,13 @@ uint64_t how_many_characters_will_map_have(gamma_t *g) {
     //dodatkowe 2 miejsca na nawiasy '[', ']'
     //i ilość cyfr w indeksie pomniejszoną o 1.
     uint32_t next_limiter = 99;
-    uint32_t bonus_digits = 1;
+    uint32_t bonus_characters = 3;
     for (uint32_t i = 9; i < g->players_count; i++) {
         if (i == next_limiter) {
             next_limiter = next_limiter * 10 + 9;
-            bonus_digits++;
+            bonus_characters++;
         }
-        size += g->players[i].number_of_fields * bonus_digits;
+        size += g->players[i].number_of_fields * bonus_characters;
     }
     //Jedna komórka dla znaku '\0'
     size++;
@@ -1068,7 +1068,10 @@ uint64_t how_many_characters_will_map_have(gamma_t *g) {
  * @return Wskaźnik na zaalokowany bufor zawierający napis opisujący stan
  * planszy lub NULL, jeśli nie udało się zaalokować pamięci.
  */
-char *gamma_board(gamma_t *g) {
+char* gamma_board(gamma_t *g) {
+    if(g == NULL) {
+        return NULL;
+    }
     uint64_t array_size = how_many_characters_will_map_have(g);
     char *map_string = malloc(array_size * sizeof(char));
     uint64_t curr_index = 0;
