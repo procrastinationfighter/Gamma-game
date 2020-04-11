@@ -49,13 +49,14 @@ struct gamma {
  * Sprawdza, czy parametry @p width, @p height, @p players są niezerowe.
  * @param[in] width         – szerokość planszy,
  * @param[in] height        – wysokość planszy,
- * @param[in] players       – ilość graczy.
+ * @param[in] players       – ilość graczy,
+ * @param[in] areas         – maksymalna ilość obszarów na jednego gracza.
  * @return Wartość @p true, jeśli wszystkie parametry są większe od zera,
  * lub false jeśli którykolwiek jest równy zero.
  */
 bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
-                                    uint32_t players) {
-    if (width == 0 || height == 0 || players == 0) {
+                                    uint32_t players, uint32_t areas) {
+    if (width == 0 || height == 0 || players == 0 || areas == 0) {
         return false;
     }
     else {
@@ -240,7 +241,7 @@ gamma_t *allocate_board_arrays(gamma_t *board, uint32_t width,
  */
 gamma_t *gamma_new(uint32_t width, uint32_t height,
                    uint32_t players, uint32_t areas) {
-    if (!are_gamma_new_parameters_valid(width, height, players)) {
+    if (!are_gamma_new_parameters_valid(width, height, players, areas)) {
         return NULL;
     }
 

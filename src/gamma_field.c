@@ -8,6 +8,8 @@
 
 #include "gamma_field.h"
 #include <malloc.h>
+#include <errno.h>
+#include <stdlib.h>
 
 /**
  * Struktura przechowująca dane o elemencie kolejki elementów typu gamma_field.
@@ -33,6 +35,11 @@ typedef struct fieldqueue field_queue;
  */
 void field_queue_init(field_queue **q) {
     *q = malloc(sizeof(field_queue));
+    if(*q == NULL) {
+        errno = ENOMEM;
+        exit(EXIT_FAILURE);
+    }
+
     (*q)->front = NULL;
     (*q)->end = NULL;
 }
@@ -46,6 +53,11 @@ void field_queue_init(field_queue **q) {
 void field_queue_push(field_queue *q, gamma_field *element) {
     if(q != NULL) {
         queue_element *el = malloc(sizeof(queue_element));
+        if(el == NULL) {
+            errno = ENOMEM;
+            exit(EXIT_FAILURE);
+        }
+
         el->field = element;
         el->next = NULL;
         if(q->front == NULL) {
