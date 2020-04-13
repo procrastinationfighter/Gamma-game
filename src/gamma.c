@@ -54,14 +54,9 @@ struct gamma {
  * @return Wartość @p true, jeśli wszystkie parametry są większe od zera,
  * lub false jeśli którykolwiek jest równy zero.
  */
-bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
-                                    uint32_t players, uint32_t areas) {
-    if (width == 0 || height == 0 || players == 0 || areas == 0) {
-        return false;
-    }
-    else {
-        return true;
-    }
+static bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
+                                           uint32_t players, uint32_t areas) {
+    return !(width == 0 || height == 0 || players == 0 || areas == 0);
 }
 
 /** @brief Zwalnia zaalokowaną pamięć w dwuwymiarowej tablicy gamma_field.
@@ -70,7 +65,7 @@ bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
  * @param[in] fields         – dwuwymiarowa tablica zmiennych typu gamma_field
  * @param[in] columns_count  – liczba zaalokowanych wskaźników w tablicy fields.
  */
-void free_board(gamma_field **fields, uint32_t columns_count) {
+static void free_board(gamma_field **fields, uint32_t columns_count) {
     for (uint32_t i = 0; i < columns_count; i++) {
         free(fields[i]);
     }
@@ -83,7 +78,7 @@ void free_board(gamma_field **fields, uint32_t columns_count) {
  * @param[in] map            – tablica "odwiedzonych" przez algorytm BFS pól,
  * @param[in] columns_count  – liczba zaalokowanych wskaźników w tablicy map.
  */
-void free_visited_map(bool **map, uint32_t columns_count) {
+static void free_visited_map(bool **map, uint32_t columns_count) {
     for (uint32_t i = 0; i < columns_count; i++) {
         free(map[i]);
     }
@@ -100,7 +95,7 @@ void free_visited_map(bool **map, uint32_t columns_count) {
  * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
  * wypadku.
  */
-bool allocate_board(gamma_t *board, uint32_t width, uint32_t height) {
+static bool allocate_board(gamma_t *board, uint32_t width, uint32_t height) {
     board->fields = malloc(width * sizeof(gamma_field *));
     if (board->fields == NULL) {
         return false;
@@ -133,7 +128,7 @@ bool allocate_board(gamma_t *board, uint32_t width, uint32_t height) {
  * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
  * wypadku.
  */
-bool allocate_players(gamma_t *board, uint32_t players) {
+static bool allocate_players(gamma_t *board, uint32_t players) {
     board->players = malloc(players * sizeof(player_t));
     if (board->players == NULL) {
         return false;
@@ -156,7 +151,7 @@ bool allocate_players(gamma_t *board, uint32_t players) {
  * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
  * wypadku.
  */
-bool allocate_visited_map(gamma_t *board) {
+static bool allocate_visited_map(gamma_t *board) {
     board->visited_fields_board = malloc(board->board_width * sizeof(bool *));
     if (board->visited_fields_board == NULL) {
         return false;
@@ -182,7 +177,7 @@ bool allocate_visited_map(gamma_t *board) {
  * zmiennej @p board na @p false.
  * @param[in,out] board      – wskaźnik na strukturę przechowującą dane gry,
  */
-void reset_visited_map(gamma_t *board) {
+static void reset_visited_map(gamma_t *board) {
     for (uint32_t i = 0; i < board->board_width; i++) {
         for (uint32_t j = 0; j < board->board_height; j++) {
             board->visited_fields_board[i][j] = false;
@@ -199,8 +194,8 @@ void reset_visited_map(gamma_t *board) {
  * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
  * wypadku.
  */
-gamma_t *allocate_board_arrays(gamma_t *board, uint32_t width,
-                               uint32_t height, uint32_t players) {
+static gamma_t *allocate_board_arrays(gamma_t *board, uint32_t width,
+                                      uint32_t height, uint32_t players) {
     bool was_creating_successful = allocate_board(board, width, height);
     if (!was_creating_successful) {
         free(board);
@@ -284,13 +279,8 @@ void gamma_delete(gamma_t *g) {
  * @return Wartość @p true, jeśli parametr znajduje się w podanym zakresie
  * lub @p false w przeciwnym wypadku.
  */
-bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
-    if (player == 0 || player > g->players_count) {
-        return false;
-    }
-    else {
-        return true;
-    }
+static bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
+    return !(player == 0 || player > g->players_count);
 }
 
 /** @brief Sprawdza, czy parametry funkcji @ref gamma_move są prawidłowe.
@@ -305,15 +295,10 @@ bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
  * @return Wartość @p true, jeśli parametry znajduje się we właściwych zakresacj
  * lub @p false w przeciwnym wypadku.
  */
-bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
-                                     uint32_t x, uint32_t y) {
-    if (g != NULL && x < g->board_width && y < g->board_height &&
-        is_player_parameter_valid(g, player)) {
-        return true;
-    }
-    else {
-        return false;
-    }
+static bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
+                                            uint32_t x, uint32_t y) {
+    return (g != NULL && x < g->board_width && y < g->board_height &&
+            is_player_parameter_valid(g, player));
 }
 
 /** @brief Sprawdza, czy dany gracz jest w posiadaniu pól sąsiednich do (@p x, @p y).
@@ -333,8 +318,8 @@ bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
  *         należy do danego gracza lub wartość @p false w przeciwnym
  *         przypadku.
  */
-bool does_player_own_adjacent_fields(gamma_t *board, uint32_t player,
-                                     uint32_t x, uint32_t y) {
+static bool does_player_own_adjacent_fields(gamma_t *board, uint32_t player,
+                                            uint32_t x, uint32_t y) {
     if (x + 1 < board->board_width && board->fields[x + 1][y].owner_index == player) {
         return true;
     }
@@ -367,32 +352,32 @@ bool does_player_own_adjacent_fields(gamma_t *board, uint32_t player,
  *         ilość nowych pól sąsiednich do wszystkich pól gracza
  *         @p player.
  */
-uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
-                                        uint32_t x, uint32_t y) {
+static uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
+                                               uint32_t x, uint32_t y) {
     uint32_t new_fields_count = 0;
 
     if (x + 1 < board->board_width &&
         board->fields[x + 1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
         !does_player_own_adjacent_fields(board, player, x + 1, y)) {
-        new_fields_count++;
+            new_fields_count++;
     }
 
     if (x > 0 &&
         board->fields[x - 1][y].owner_index == DEFAULT_PLAYER_NUMBER &&
         !does_player_own_adjacent_fields(board, player, x - 1, y)) {
-        new_fields_count++;
+            new_fields_count++;
     }
 
     if (y + 1 < board->board_height &&
         board->fields[x][y + 1].owner_index == DEFAULT_PLAYER_NUMBER &&
         !does_player_own_adjacent_fields(board, player, x, y + 1)) {
-        new_fields_count++;
+            new_fields_count++;
     }
 
     if (y > 0 &&
         board->fields[x][y - 1].owner_index == DEFAULT_PLAYER_NUMBER &&
         !does_player_own_adjacent_fields(board, player, x, y - 1)) {
-        new_fields_count++;
+            new_fields_count++;
     }
 
     return new_fields_count;
@@ -413,8 +398,8 @@ uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
  * @return Liczba w zakresie od 0 do 4 włącznie, oznaczająca liczbę różnych
  * zbiorów, które zostały połączone.
  */
-__uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
-                               uint32_t x, uint32_t y) {
+static uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
+                                    uint32_t x, uint32_t y) {
     uint32_t united_sets = 0;
     if (x + 1 < g->board_width && g->fields[x + 1][y].owner_index == player) {
         if (unite_fields(&g->fields[x][y], &g->fields[x + 1][y], g->fields)) {
@@ -453,7 +438,7 @@ __uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
  * @return Wartość @p true jeśli pole należy do innego gracza
  *         lub wartość @p false w przeciwnym wypadku.
  */
-bool does_field_belong_to_other_player(gamma_field *field, uint32_t player) {
+static bool does_field_belong_to_other_player(gamma_field *field, uint32_t player) {
     return (field->owner_index != DEFAULT_PLAYER_NUMBER &&
             field->owner_index != player);
 }
@@ -470,8 +455,8 @@ bool does_field_belong_to_other_player(gamma_field *field, uint32_t player) {
  * @return Wartość @p true jeśli gracz już został uzwględniony lub
  *         wartość @p false jeśli nie został uwzględniony.
  */
-bool was_player_adjacent_already_updated(uint32_t player, const uint32_t *players,
-                                         uint32_t players_count) {
+static bool was_player_adjacent_already_updated(uint32_t player, const uint32_t *players,
+                                                uint32_t players_count) {
     for (uint32_t i = 0; i < players_count; i++) {
         if (players[i] == player) {
             return true;
@@ -495,8 +480,8 @@ bool was_player_adjacent_already_updated(uint32_t player, const uint32_t *player
  * @param[in] y               – numer wiersza, mniejszy od składowej
  *                              @p board_height ze zmiennej @p board.
  */
-void update_other_players_adjacent_fields_after_move(gamma_t *g, uint32_t player,
-                                                     uint32_t x, uint32_t y) {
+static void update_other_players_adjacent_fields_after_move(gamma_t *g, uint32_t player,
+                                                            uint32_t x, uint32_t y) {
     uint32_t players_checked[3];
     uint32_t players_count = 0;
     if (x + 1 < g->board_width &&
@@ -589,8 +574,8 @@ bool gamma_move(gamma_t *g, uint32_t player,
  *                         @p board_height ze zmiennej @p g.
  * @return
  */
-bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
-                                      uint32_t x, uint32_t y) {
+static bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
+                                             uint32_t x, uint32_t y) {
     if (g == NULL || x >= g->board_width || y >= g->board_height) {
         return false;
     }
@@ -615,8 +600,8 @@ bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
  * @param[in] y          – numer wiersza, mniejszy od składowej
  *                         @p board_height ze zmiennej @p g.
  */
-void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
-                                 uint32_t x, uint32_t y) {
+static void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
+                                        uint32_t x, uint32_t y) {
     if (x + 1 != g->board_width && g->fields[x + 1][y].owner_index == player) {
         g->fields[x + 1][y].parent_x = g->fields[x + 1][y].this_x;
         g->fields[x + 1][y].parent_y = g->fields[x + 1][y].this_y;
@@ -649,8 +634,8 @@ void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
  * @return Wartosć @p true jeśli pole spełnia powyższe warunki
  *         lub wartość @p false, jeśli ich nie spełnia.
  */
-bool should_field_be_visited(gamma_field *field, uint32_t player,
-                             bool **visited_map) {
+static bool should_field_be_visited(gamma_field *field, uint32_t player,
+                                    bool **visited_map) {
     return (field->owner_index == player &&
             !visited_map[field->this_x][field->this_y]);
 }
@@ -665,8 +650,8 @@ bool should_field_be_visited(gamma_field *field, uint32_t player,
  * @param g[in]          – wskaźnik na strukturę przechowującą dane gry,
  * @param field[in]      – wskaźnik na strukturę przechowującą dane pola,
  */
-void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
-                                  gamma_field *field) {
+static void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
+                                         gamma_field *field) {
     uint32_t curr_x = field->this_x;
     uint32_t curr_y = field->this_y;
 
@@ -709,7 +694,7 @@ void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
  * @param[in] y          – numer wiersza, mniejszy od składowej
  *                         @p board_height ze zmiennej @p g.
  */
-void set_field_as_set_root(gamma_t *g, uint32_t x, uint32_t y) {
+static void set_field_as_set_root(gamma_t *g, uint32_t x, uint32_t y) {
     field_queue *queue;
     field_queue_init(&queue);
     field_queue_push(queue, &g->fields[x][y]);
@@ -753,7 +738,8 @@ void set_field_as_set_root(gamma_t *g, uint32_t x, uint32_t y) {
  * do których należą należące do gracza @p player pola sąsiednie
  * do pola o współrzędnych (@p x, @p y).
  */
-int update_areas_after_removal(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
+static int update_areas_after_removal(gamma_t *g, uint32_t player,
+                                      uint32_t x, uint32_t y) {
     int areas_count = 0;
     if (x + 1 < g->board_width && g->fields[x + 1][y].owner_index == player) {
         set_field_as_set_root(g, x + 1, y);
@@ -799,8 +785,9 @@ int update_areas_after_removal(gamma_t *g, uint32_t player, uint32_t x, uint32_t
  * @param[in] y          – numer wiersza, mniejszy od składowej
  *                         @p board_height ze zmiennej @p g.
  */
-void update_other_players_adjacent_fields_after_removing(gamma_t *g,
-                                                         uint32_t player, uint32_t x, uint32_t y) {
+static void update_other_players_adjacent_fields_after_removing(gamma_t *g,
+                                                                uint32_t player,
+                                                                uint32_t x, uint32_t y) {
     uint32_t players_checked[3];
     uint32_t players_count = 0;
     if (x + 1 != g->board_width &&
@@ -851,8 +838,8 @@ void update_other_players_adjacent_fields_after_removing(gamma_t *g,
  * @param[in] y          – numer wiersza, mniejszy od składowej
  *                         @p board_height ze zmiennej @p g.
 */
-void update_player_adjacent_fields_after_removing(gamma_t *g, uint32_t player,
-                                                  uint32_t x, uint32_t y) {
+static void update_player_adjacent_fields_after_removing(gamma_t *g, uint32_t player,
+                                                         uint32_t x, uint32_t y) {
     uint32_t removed_fields = how_many_adjacent_fields_added(g, player, x, y);
     g->players[player - 1].adjacent_fields -= removed_fields;
 }
@@ -874,7 +861,8 @@ void update_player_adjacent_fields_after_removing(gamma_t *g, uint32_t player,
  * @return Wartość @p true jeśli usunięcie było legalne
  * lub wartość @p false w przeciwnym wypadku.
  */
-bool remove_field_ownership(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
+static bool remove_field_ownership(gamma_t *g, uint32_t player,
+                                   uint32_t x, uint32_t y) {
     gamma_field *curr_field = &g->fields[x][y];
     curr_field->owner_index = DEFAULT_PLAYER_NUMBER;
     bool is_removal_legal = true;
@@ -1005,7 +993,7 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
  * @param digit[in]   – cyfra
  * @return Znak odpowiadający cyfrze @p digit.
  */
-char digit_to_char(uint32_t digit) {
+static char digit_to_char(uint32_t digit) {
     return (char) (digit + (uint32_t) '0');
 }
 
@@ -1017,7 +1005,7 @@ char digit_to_char(uint32_t digit) {
  *                            wartość większa od 9,
  * @param length            – aktualna długość tablicy @p s.
  */
-void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) {
+static void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) {
     s[*length] = '[';
     (*length)++;
     uint32_t digits = (uint32_t) log10(number) + 1;
@@ -1040,7 +1028,7 @@ void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) {
  * @return Liczba symbolizująca docelowy rozmiar tablicy znaków
  * reprezentującej planszę @p g.
  */
-uint64_t how_many_characters_will_map_have(gamma_t *g) {
+static uint64_t how_many_characters_will_map_have(gamma_t *g) {
     //Jedna komórka dla każdego pola i dodatkowa kolumna na znaki '\n'.
     uint64_t size = ((uint64_t) g->board_height * (uint64_t) (g->board_width + 1));
     //Każdy gracz o indeksie większym od 9, zajmie na planszy
