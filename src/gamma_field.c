@@ -7,31 +7,28 @@
  */
 
 #include "gamma_field.h"
-#include <malloc.h>
 #include <errno.h>
 #include <stdlib.h>
 
 /**
  * Struktura przechowująca dane o elemencie kolejki elementów typu gamma_field.
  */
-struct queueelement{
+typedef struct queueelement{
     struct queueelement *next; ///< Następny element.
     gamma_field *field;        ///< Pole na planszy.
-};
-typedef struct queueelement queue_element;
+} queue_element;
 
 /**
  * Struktura reprezentująca kolejkę obiektów typu gamma_field.
  */
-struct fieldqueue{
+typedef struct fieldqueue{
     queue_element *front;   ///< Wskaźnik na pierwszy element kolejki.
     queue_element *end;     ///< Wskaźnik na ostatni element kolejki.
-};
-typedef struct fieldqueue field_queue;
+} field_queue;
 
 /** @brief Inicjalizuje kolejkę.
  * Ustawia pola kolejki @p na NULL.
- * @param q     – wskaźnik na wskaźnik na strukturę kolejki.
+ * @param[out] q     – wskaźnik na wskaźnik na strukturę kolejki.
  */
 void field_queue_init(field_queue **q) {
     *q = malloc(sizeof(field_queue));
@@ -47,8 +44,8 @@ void field_queue_init(field_queue **q) {
 /** @brief Dodaje pole do kolejki.
  * Tworzy element kolejki zawierający pole, na które wskazuje @p element
  * oraz dodaje go do kolejki.
- * @param q         – wskaźnik na strukturę kolejki,
- * @param element   – wskaźnik na pole.
+ * @param[in,out] q    – wskaźnik na strukturę kolejki,
+ * @param[in] element   – wskaźnik na pole.
  */
 void field_queue_push(field_queue *q, gamma_field *element) {
     if(q != NULL) {
@@ -72,7 +69,7 @@ void field_queue_push(field_queue *q, gamma_field *element) {
 
 /** @brief Wyjmuje pierwszy element z kolejki.
  * Usuwa z kolejki pierwszy element i ustanawia kolejny element jako pierwszy.
- * @param q     – wskaźnik na strukturę kolejki.
+ * @param[in,out] q     – wskaźnik na strukturę kolejki.
  * @return Wskaźnik na pole będące pierwszym elementem w kolejce,
  * lub @p NULL jeśli kolejka jest pusta.
  */
@@ -95,7 +92,7 @@ gamma_field* field_queue_pop(field_queue *q) {
 /** @brief Sprawdza, czy kolejka jest pusta.
  * Sprawdza, czy kolejka nie zawiera żadnych elementów poprzez
  * sprawdzenie, czy wskaźnik na pierwszy element nie jest równy @p NULL.
- * @param q     – wskaźnik na strukturę kolejki.
+ * @param[in] q     – wskaźnik na strukturę kolejki.
  * @return Wartość @p true, jeśli w kolejce nie ma elementów
  * lub wartość @p false jeśli kolejka zawiera elementy.
  */
@@ -105,7 +102,7 @@ bool field_queue_is_empty(field_queue *q) {
 
 /** @brief Usuwa kolejkę.
  * Usuwa wszystkie elementy w kolejce i zwalnia pamięć zaalokowaną na kolejkę.
- * @param q     – wskaźnik na strukturę kolejki.
+ * @param[in,out] q    – wskaźnik na strukturę kolejki.
  */
 void field_queue_clear(field_queue **q) {
     while(!field_queue_is_empty(*q)) {
@@ -119,8 +116,8 @@ void field_queue_clear(field_queue **q) {
  * W ramach algorytmu find and union, znajduje korzeń pola, na które wskazuje
  * @p field oraz kompresuje jego ścieżkę do pola poprzez ustanowienie
  * rodzica tego pola na korzeń.
- * @param field     – wskaźnik na pole,
- * @param board     – tablica pól.
+ * @param[in] field     – wskaźnik na pole,
+ * @param[in] board     – tablica pól.
  * @return Wskaźnik na korzeń pola @p field.
  */
 gamma_field* find_root_field(gamma_field *field, gamma_field **board) {
@@ -142,9 +139,9 @@ gamma_field* find_root_field(gamma_field *field, gamma_field **board) {
 /** @brief Łączy zbiory, do których należą pola.
  * Łączy zbiory, do których należą pola wskazywane przez @p f1 i @p f2,
  * poprzez podpięcie jednego z korzeni do drugiego.
- * @param f1        – pierwsze pole,
- * @param f2        – drugie pole,
- * @param board     – tablica pól.
+ * @param[in,out] f1        – pierwsze pole,
+ * @param[in,out] f2        – drugie pole,
+ * @param[in] board         – tablica pól.
  * @return Wartość @p true, jeśli pola znajdowały się w różnych zbiorach
  * lub wartość @p false, jeśli znajdowały się w tym samym zbiorze.
  */
@@ -172,7 +169,7 @@ bool unite_fields(gamma_field *f1, gamma_field *f2, gamma_field **board) {
 
 /** @brief Sprawdza, czy pole jest korzeniem.
  * Sprawdza, czy współrzędne tego pola są równe współrzędnym jego rodzica.
- * @param f     – wskaźnik na pole.
+ * @param[in] f     – wskaźnik na pole.
  * @return Wartość @p true, jeśli pole jest korzeniem
  * lub wartość @p false w przeciwnym wypadku.
  */

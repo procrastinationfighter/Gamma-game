@@ -12,21 +12,28 @@
 #include <errno.h>
 #include "gamma_field.h"
 
+/**
+ * Domyślny indeks właściciela dla pola, które nie należy do żadnego gracza.
+ */
 #define DEFAULT_PLAYER_NUMBER 0
+
+/**
+ * Symbol w napisie symbolizującym stan planszy, oznaczający,
+ * że dane pole nie należy do żadnego gracza.
+ */
 #define DEFAULT_PLAYER_IDENTIFIER '.'
 
 /**
  * Struktura przechowująca dane o jednym graczu.
  */
-struct player {
+typedef struct player {
     uint32_t number_of_areas;       ///< liczba obszarów w posiadaniu gracza
     uint32_t number_of_fields;      ///< liczba pól w posiadaniu gracza
     uint32_t adjacent_fields;       ///< liczba pól, na które gracz może postawić
-    ///< pionek bez zwiększania liczby obszarów
+                                    ///< pionek bez zwiększania liczby obszarów
     bool has_golden_move_available; ///< zmienna mówiąca o tym, czy gracz
-    ///< może jeszcze wykonać ruch
-};
-typedef struct player player_t;
+                                    ///< może jeszcze wykonać ruch
+} player_t;
 
 /**
  * Struktura przechowująca stan gry.
@@ -35,12 +42,12 @@ struct gamma {
     player_t *players;            ///< tablica przechowująca informacje o graczach
     gamma_field **fields;         ///< tablica przechowująca informacje o polach
     bool **visited_fields_board;  ///< tablica odwiedzonych pól, wykorzystywana
-    ///< podczas przechodzenia planszy w funkcji
-    ///< @ref set_field_as_set_root
+                                  ///< podczas przechodzenia planszy w funkcji
+                                  ///< @ref set_field_as_set_root
     uint32_t board_width;         ///< liczba kolumn planszy
     uint32_t board_height;        ///< liczba wierszy planszy
     uint32_t max_areas;           ///< maksymalna liczba obszarów, jakie
-    ///< jeden gracz może kontrolować
+                                  ///< jeden gracz może kontrolować
     uint32_t players_count;       ///< liczba graczy
     uint64_t free_fields;         ///< pola na planszy nienależące do żadnego gracza
 };
@@ -190,7 +197,9 @@ static void reset_visited_map(gamma_t *board) {
  * W przypadku niepowodzenia, zwalnia całą zaalokowaną w zmiennej @p board pamięć
  * i ustawia wartość @p errno na ENOMEM.
  * @param[in,out] board      – wskaźnik na strukturę przechowującą dane gry,
- * @param[in] players        – liczba graczy, wartość dodatnia.
+ * @param[in] width          – szerokość planszy, liczba dodatnia,
+ * @param[in] height         – wysokość planszy, liczba dodatnia,
+ * @param[in] players        – liczba graczy, liczba dodatnia.
  * @return Wartość @p true jeśli alokacja się powiodła i @p false w przeciwnym
  * wypadku.
  */
@@ -387,7 +396,7 @@ static uint32_t how_many_adjacent_fields_added(gamma_t *board, uint32_t player,
  * Łączy singleton pola o współrzędnych (@p x, @p y) ze zbiorami, do których
  * należą pola (@p x + 1, @p y), (@p x - 1, @p y), (@p x, @p y + 1), (@p x, @p y - 1),
  * pod warunkiem że te pola należą do gracza @p player.
- * @param[in, out] board  – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in, out] g      – wskaźnik na strukturę przechowującą dane gry,
  * @param[in] player      – indeks gracza, liczba dodatnia
  *                          i niewiększa od składowej @p players
  *                          ze zmiennej @p board
@@ -471,7 +480,7 @@ static bool was_player_adjacent_already_updated(uint32_t player, const uint32_t 
  * aktualizuje dla każdego danego gracza całkowitą ilość pól sąsiadujących
  * z jego polami. Jeśli danemu graczowi już tę liczbę zaktualizowano,
  * pomija dane pole.
- * @param[in, out] board      – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in, out] g          – wskaźnik na strukturę przechowującą dane gry,
  * @param[in] player          – indeks gracza, liczba dodatnia
  *                              i niewiększa od składowej @p players
  *                              ze zmiennej @p board,
@@ -560,7 +569,7 @@ bool gamma_move(gamma_t *g, uint32_t player,
     return true;
 }
 
-/** @brief Sprawdza, czy parametry funkcji @ref golden_move śa prawidłowe.
+/** @brief Sprawdza, czy parametry funkcji @ref gamma_golden_move śa prawidłowe.
  * Sprawdza, czy parametry @p player, @p x i @p y mieszczą się w zakresach
  * ustalanych przez składowe zmiennej @p board, odpowiednio @p players_count,
  * @p board_width i @p board_height.
@@ -645,10 +654,10 @@ static bool should_field_be_visited(gamma_field *field, uint32_t player,
  * (@p field->this_x + 1, @p field->this_y), (@p field->this_x - 1, @p field->this_y),
  * (@p field->this_x, @p field->this_y + 1), (@p field->this_x, @p field->this_y - 1),
  * jeśli nie zostały one odwiedzone i należą do gracza o indeksie @p field->owner_index.
- * @param queue[in, out] – wskaźnik na strukturę reprezentującą kolejkę
+ * @param[in, out] queue – wskaźnik na strukturę reprezentującą kolejkę
  *                         danych typu gamma_field,
- * @param g[in]          – wskaźnik na strukturę przechowującą dane gry,
- * @param field[in]      – wskaźnik na strukturę przechowującą dane pola,
+ * @param[in] g          – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] field      – wskaźnik na strukturę przechowującą dane pola,
  */
 static void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
                                          gamma_field *field) {
@@ -1000,10 +1009,10 @@ static char digit_to_char(uint32_t digit) {
 /** @brief Umieszcza na planszy do wypisania liczbę wielocyfrową.
  * Zamienia liczbę wielocyfrową @p number na ciąg znaków i umieszcza
  * ją w tablicy znaków @s.
- * @param s[in,out]         – tablica znaków symbolizująca planszę,
- * @param number            – liczba, która ma zostać wypisana na planszę,
+ * @param[in,out] s         – tablica znaków symbolizująca planszę,
+ * @param[in] number        – liczba, która ma zostać wypisana na planszę,
  *                            wartość większa od 9,
- * @param length            – aktualna długość tablicy @p s.
+ * @param[in, out] length   – aktualna długość tablicy @p s.
  */
 static void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) {
     s[*length] = '[';
@@ -1024,7 +1033,7 @@ static void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) 
  * Oblicza rozmiar tablicy znaków opisującej planszę @p g,
  * biorąc pod uwagę wielocyfrowe indeksy graczy,
  * znaki końca linii oraz znak '\0' na końcu tablicy.
- * @param g     – wskaźnik na strukturę przechowującą dane o grze.
+ * @param[in] g     – wskaźnik na strukturę przechowującą dane o grze.
  * @return Liczba symbolizująca docelowy rozmiar tablicy znaków
  * reprezentującej planszę @p g.
  */
