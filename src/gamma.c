@@ -999,7 +999,7 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
 
 /** @brief Zamienia cyfrę na odpowiadający jej znak typu char.
  * Do kodu znaku '0' zostaje dodana liczba odpowiadająca cyfrze @p digit.
- * @param digit[in]   – cyfra
+ * @param[in] digit   – cyfra
  * @return Znak odpowiadający cyfrze @p digit.
  */
 static char digit_to_char(uint32_t digit) {
@@ -1008,7 +1008,7 @@ static char digit_to_char(uint32_t digit) {
 
 /** @brief Umieszcza na planszy do wypisania liczbę wielocyfrową.
  * Zamienia liczbę wielocyfrową @p number na ciąg znaków i umieszcza
- * ją w tablicy znaków @s.
+ * ją w tablicy znaków @p s.
  * @param[in,out] s         – tablica znaków symbolizująca planszę,
  * @param[in] number        – liczba, która ma zostać wypisana na planszę,
  *                            wartość większa od 9,

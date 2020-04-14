@@ -62,7 +62,7 @@ bool field_queue_is_empty(field_queue *q);
 
 /** @brief Usuwa kolejkę.
  * Usuwa wszystkie elementy w kolejce i zwalnia pamięć zaalokowaną na kolejkę.
- * @param q[in,out]     – wskaźnik na strukturę kolejki.
+ * @param[in,out] q    – wskaźnik na strukturę kolejki.
  */
 void field_queue_clear(field_queue **q);
 
