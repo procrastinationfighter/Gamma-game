@@ -747,8 +747,8 @@ static void set_field_as_set_root(gamma_t *g, uint32_t x, uint32_t y) {
  * do których należą należące do gracza @p player pola sąsiednie
  * do pola o współrzędnych (@p x, @p y).
  */
-static int update_areas_after_removal(gamma_t *g, uint32_t player,
-                                      uint32_t x, uint32_t y) {
+static uint32_t update_areas_after_removal(gamma_t *g, uint32_t player,
+                                           uint32_t x, uint32_t y) {
     int areas_count = 0;
     if (x + 1 < g->board_width && g->fields[x + 1][y].owner_index == player) {
         set_field_as_set_root(g, x + 1, y);
