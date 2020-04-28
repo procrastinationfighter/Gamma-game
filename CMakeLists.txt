@@ -21,11 +21,22 @@ set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 
 # Wskazujemy pliki źródłowe.
 set(SOURCE_FILES
-    src/gamma.c
-    src/gamma.h
-    src/gamma_test.c
-    src/gamma_field.c
-    src/gamma_field.h)
+        src/gamma.c
+        src/gamma.h
+        src/gamma_field.c
+        src/gamma_field.h
+        src/gamma_batch_mode.c
+        src/gamma_batch_mode.h
+        src/gamma_main.c
+        src/gamma_interactive_mode.c
+        src/gamma_interactive_mode.h)
+
+set(TEST_SOURCE_FILES
+        src/gamma.c
+        src/gamma.h
+        src/gamma_test.c
+        src/gamma_field.c
+        src/gamma_field.h)
 
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES})
