@@ -29,7 +29,7 @@ set(SOURCE_FILES
         src/gamma_batch_mode.h
         src/gamma_main.c
         src/gamma_interactive_mode.c
-        src/gamma_interactive_mode.h)
+        src/gamma_interactive_mode.h src/String.c src/String.h)
 
 set(TEST_SOURCE_FILES
         src/gamma.c
