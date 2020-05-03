@@ -18,10 +18,4 @@
  */
 void run_batch_mode(gamma_t *game_board, uint32_t *lines);
 
-/** @brief Wypisuje informacje o błędzie.
- * Wypisuje informację o błędzie oraz numer linii, w którym wystąpił.
- * @param[in] lines     – liczba linii wejścia przed uruchomieniem trybu.
- */
-void print_error(uint32_t lines);
-
 #endif //GAMMA_GAMMA_BATCH_MODE_H
