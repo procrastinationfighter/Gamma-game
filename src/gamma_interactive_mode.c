@@ -3,7 +3,7 @@
  *
  * @author Adam Boguszewski <ab417730@students.mimuw.edu.pl>
  * @copyright Uniwersytet Warszawski
- * @date 4.05.2020
+ * @date 6.05.2020
  */
 
 #include "gamma_interactive_mode.h"

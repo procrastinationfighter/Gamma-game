@@ -1,3 +1,10 @@
+/** @file
+ * Interfejs modułu obsługującego wejście gry gamma.
+ *
+ * @author Adam Boguszewski <ab417730@students.mimuw.edu.pl>
+ * @copyright Uniwersytet Warszawski
+ * @date 3.05.2020
+ */
 #ifndef GAMMA_GAMMA_INPUT_H
 #define GAMMA_GAMMA_INPUT_H
 
@@ -29,6 +36,15 @@ typedef struct command command_t;
  * @param[in] lines     – liczba linii wejścia przed uruchomieniem trybu.
  */
 void print_error(uint32_t lines);
+
+/** @brief Sprawdza, czy linię wejścia należy pominąć.
+ * Sprawdza, czy linia nie składa się z komentarza
+ * lub pojedyczego znaku końca linii.
+ * @param command           – polecenie.
+ * @return Wartość @p true jeśli znak komendy jest
+ * znakiem komentarza lub znakiem końca linii.
+ */
+static bool should_line_be_skipped(command_t *command);
 
 /** @brief Czyta linię z wejścia i przetwarza ją na komendę.
  * Czyta daną linię z wejścia i zapisuje

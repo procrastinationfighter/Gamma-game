@@ -84,6 +84,27 @@ static bool is_parameter_count_correct(command_t *command) {
     }
 }
 
+/** @brief Sprawdza, czy parametry są w odpowiednim zakresie.
+ * Sprawdza, czy parametry spełniają jeden z warunków:
+ * są w zakresie od 0 do UINT32_MAX
+ * LUB są równe @p BLANK_PARAMETER_NUMBER.
+ * @param command           – komenda.
+ * @return Wartość @p true jeśli jeden z tych warunków
+ * jest spełniony lub @p false w przeciwnym wypadku.
+ */
+static bool are_parameters_in_bound(command_t *command) {
+    long params[4] = {command->first_par, command->second_par,
+                      command->third_par, command->fourth_par};
+    for(int i = 0; i < 4; i++) {
+        long q = params[i];
+        if(q != BLANK_PARAMETER_NUMBER && (q > UINT32_MAX || q < 0)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 /** @brief Sprawdza poprawność parametrów polecenia.
  * Sprawdza, czy znak komendy jest poprawny
  * oraz czy ilość parametrów zgadza się z jego parametrami.
@@ -92,7 +113,9 @@ static bool is_parameter_count_correct(command_t *command) {
  * lub @p false w przeciwnym wypadku.
  */
 static bool are_parameters_correct(command_t *command) {
-    return is_command_valid(command->type) && is_parameter_count_correct(command);
+    return is_command_valid(command->type) &&
+           is_parameter_count_correct(command) &&
+           are_parameters_in_bound(command);
 }
 
 /** @brief Wykonuje polecenie z podanymi parametrami.
@@ -147,7 +170,7 @@ static void read_and_execute_command(gamma_t *game_board, command_t  *command,
                                                             uint32_t *lines) {
     (*lines)++;
     if(read_command(command)) {
-        if(feof(stdin)) {
+        if(feof(stdin) || should_line_be_skipped(command)) {
             return;
         }
         else if(!execute_command(game_board, command)) {
@@ -162,7 +185,8 @@ static void read_and_execute_command(gamma_t *game_board, command_t  *command,
 
 /** @brief Przeprowadza grę za pomocą trybu wsadowego.
  * Zczytuje z wejścia i wykonuje polecenia zgodne z zasadami trybu wsadowego.
- * @param[in, out] lines     – liczba linii wejścia przed uruchomieniem trybu.
+ * @param[in,out] game_board  – struktura gry,
+ * @param[in,out] lines       – liczba linii wejścia przed uruchomieniem trybu.
  */
 void run_batch_mode(gamma_t *game_board, uint32_t *lines) {
     command_t curr_command;

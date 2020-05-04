@@ -1,3 +1,10 @@
+/** @file
+ * Implementacja modułu obsługującego wejście gry gamma.
+ *
+ * @author Adam Boguszewski <ab417730@students.mimuw.edu.pl>
+ * @copyright Uniwersytet Warszawski
+ * @date 3.05.2020
+ */
 #define _GNU_SOURCE
 
 #include "gamma_input.h"
@@ -7,6 +14,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include <errno.h>
+#include <assert.h>
 
 /** @brief Wypisuje informacje o błędzie.
  * Wypisuje informację o błędzie oraz numer linii, w którym wystąpił.
@@ -14,6 +22,17 @@
  */
 void print_error(uint32_t lines) {
     fprintf(stderr, "ERROR %u\n", lines);
+}
+
+/** @brief Sprawdza, czy linię wejścia należy pominąć.
+ * Sprawdza, czy linia nie składa się z komentarza
+ * lub pojedyczego znaku końca linii.
+ * @param command           – polecenie.
+ * @return Wartość @p true jeśli znak komendy jest
+ * znakiem komentarza lub znakiem końca linii.
+ */
+static bool should_line_be_skipped(command_t *command) {
+    return (command->type == COMMENT_SIGN || command->type == '\n');
 }
 
 /** @brief Zamienia ciąg cyfr na liczbę.
@@ -45,15 +64,12 @@ static long parse_number(char *parameter) {
  * W razie niepowodzenia dokonuje wyjścia.
  * @return Aktualna linia wejścia.
  */
-static char * get_current_line(bool *is_eof) {
+static char * get_current_line() {
     char *line = NULL;
     size_t len = 0;
-    int q = getline(&line, &len, stdin);
+    getline(&line, &len, stdin);
     if(errno == ENOMEM) {
         exit(EXIT_FAILURE);
-    }
-    else if(q == -1) {
-        *is_eof = true;
     }
 
     return line;
@@ -71,8 +87,8 @@ static bool read_parameter(long *param, char *delim) {
     char *p = strtok(NULL, delim);
     *param = parse_number(p);
     // Jeśli funkcja strtoul zwróciła 0 to mógł zajść błąd.
-    // Jeśli tak zajdzie, a p nie jest równe "0" to przekaż false.
-    return !(*param == 0 && !strcmp(p, "0"));
+    // Jeśli tak jest, a p nie jest równe "0" to przekaż false.
+    return !(*param == 0 && (strcmp(p, "0") != 0));
 }
 
 /** @brief Przetwarza wczytaną linię na parametry.
@@ -104,7 +120,7 @@ static bool set_command(command_t *command, char *line) {
         i++;
     }
 
-    return writing_ok;
+    return (writing_ok && strtok(NULL, delim) == NULL);
 }
 
 /** @brief Czyta linię z wejścia i przetwarza ją na komendę.
@@ -115,10 +131,10 @@ static bool set_command(command_t *command, char *line) {
  * lub wartość @p false jeśli zaszedł błąd.
  */
 bool read_command(command_t *command) {
-    bool is_eof = false;
-    char *line = get_current_line(&is_eof);
-    if(is_eof) {
-        return line == NULL;
+    char *line = get_current_line();
+    if(feof(stdin)) {
+        assert(line != NULL);
+        return strlen(line) == 0;
     }
 
     bool correct_params = set_command(command, line);
