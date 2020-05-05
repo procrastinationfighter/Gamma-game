@@ -164,23 +164,22 @@ static bool execute_command(gamma_t *game_board, command_t *command) {
 /** @brief Czyta i wykonuje polecenie ze standardowego wejścia.
  * Zczytuje z wejścia jedną linię. Jeśli polecenie jest poprawne,
  * wykonuje je. W przeciwnym wypadku wypisuje informację o błędzie.
- * @param[in, out] lines     – liczba linii wejścia do tej pory.
+ * @param[in,out] game_board    – struktura gry,
+ * @param[in] command           – polecenie,
+ * @param[in,out] lines         – liczba linii wejścia do tej pory.
  */
-static void read_and_execute_command(gamma_t *game_board, command_t  *command,
+static bool read_and_execute_command(gamma_t *game_board, command_t  *command,
                                                             uint32_t *lines) {
     (*lines)++;
-    if(read_command(command)) {
-        if(feof(stdin) || should_line_be_skipped(command)) {
-            return;
-        }
-        else if(!execute_command(game_board, command)) {
+    if(read_command(command, lines)) {
+        if(!execute_command(game_board, command)) {
             print_error(*lines);
         }
+        return true;
     }
     else {
-        print_error(*lines);
+        return false;
     }
-
 }
 
 /** @brief Przeprowadza grę za pomocą trybu wsadowego.
@@ -190,7 +189,7 @@ static void read_and_execute_command(gamma_t *game_board, command_t  *command,
  */
 void run_batch_mode(gamma_t *game_board, uint32_t *lines) {
     command_t curr_command;
-    while(!feof(stdin)) {
-        read_and_execute_command(game_board, &curr_command, lines);
+    while(read_and_execute_command(game_board, &curr_command, lines)) {
+        // Puste.
     }
 }

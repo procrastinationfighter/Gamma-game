@@ -15,6 +15,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <assert.h>
+#include <ctype.h>
 
 /** @brief Wypisuje informacje o błędzie.
  * Wypisuje informację o błędzie oraz numer linii, w którym wystąpił.
@@ -27,12 +28,13 @@ void print_error(uint32_t lines) {
 /** @brief Sprawdza, czy linię wejścia należy pominąć.
  * Sprawdza, czy linia nie składa się z komentarza
  * lub pojedyczego znaku końca linii.
- * @param command           – polecenie.
+ * @param line           – linia wejścia.
  * @return Wartość @p true jeśli znak komendy jest
  * znakiem komentarza lub znakiem końca linii.
  */
-static bool should_line_be_skipped(command_t *command) {
-    return (command->type == COMMENT_SIGN || command->type == '\n');
+static bool should_line_be_skipped(char *line) {
+    return(line != NULL && strlen(line) > 0 &&
+          (line[0] == COMMENT_SIGN || line[0] == '\n'));
 }
 
 /** @brief Zamienia ciąg cyfr na liczbę.
@@ -58,21 +60,38 @@ static long parse_number(char *parameter) {
         }
     }
 }
-
-/** @Brief Zczytuje aktualną linię wejścia.
- * Zczytuje aktualną linię wejścia.
- * W razie niepowodzenia dokonuje wyjścia.
- * @return Aktualna linia wejścia.
+/** @brief Sprawdza, czy wyraz jest poprawną liczbą.
+ * Sprawdza czy wyraz @p p składa się z samych cyfr.
+ * @param p         – łańcuch znaków
+ * @return Wartość @p true jeśli wyraz składa się z samych
+ * cyfr lub jest NULLem lub wartość @p false w przeciwnym wypadku.
  */
-static char * get_current_line() {
-    char *line = NULL;
-    size_t len = 0;
-    getline(&line, &len, stdin);
-    if(errno == ENOMEM) {
-        exit(EXIT_FAILURE);
+static bool is_string_valid_number(const char *p) {
+    if(p == NULL) {
+        return true;
+    }
+    else {
+        int i = 0;
+        while(p[i] != '\0') {
+            if(!isdigit(p[i])) {
+                return false;
+            }
+            i++;
+        }
     }
 
-    return line;
+    return true;
+}
+
+/** @brief Sprawdza poprawność pierwszego wyrazu w linii.
+ * Sprawdza, czy pierwszy wyraz w linii na pewno jest
+ * wyrazem jednoliterowym oraz czy istnieje.
+ * @param word              – słowo.
+ * @return Wartość @p true jeśli słowo spełnia warunki
+ * lub @p false w przeciwnym wypadku.
+ */
+static bool is_first_word_correct(char *word) {
+    return (word != NULL && strlen(word) == 1);
 }
 
 /** @brief Czyta jeden parametr za pomocą strtok.
@@ -85,10 +104,31 @@ static char * get_current_line() {
  */
 static bool read_parameter(long *param, char *delim) {
     char *p = strtok(NULL, delim);
-    *param = parse_number(p);
-    // Jeśli funkcja strtoul zwróciła 0 to mógł zajść błąd.
-    // Jeśli tak jest, a p nie jest równe "0" to przekaż false.
-    return !(*param == 0 && (strcmp(p, "0") != 0));
+    if(is_string_valid_number(p)) {
+        *param = parse_number(p);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+/** @Brief Zczytuje aktualną linię wejścia.
+ * Zczytuje aktualną linię wejścia.
+ * @return Aktualna linia wejścia
+ * lub @p NULL jeśli wczytywanie się nie powiodło.
+ */
+static char * get_current_line() {
+    char *line = NULL;
+    size_t len = 0;
+    int temp = getline(&line, &len, stdin);
+    if(temp == -1) {
+        free(line);
+        return NULL;
+    }
+    else {
+        return line;
+    }
 }
 
 /** @brief Przetwarza wczytaną linię na parametry.
@@ -101,15 +141,11 @@ static bool read_parameter(long *param, char *delim) {
  */
 static bool set_command(command_t *command, char *line) {
     char delim[] = " \n\t\v\f\r";
-    command->type = line[0];
     char *com = strtok(line, delim);
-
-    if(com == NULL) {
-        return (command->type == '\n' || command->type == EOF);
-    }
-    else if(strlen(com) != 1) {
+    if(!is_first_word_correct(com)) {
         return false;
     }
+    command->type = com[0];
 
     long *params[4] = {&command->first_par, &command->second_par,
                        &command->third_par, &command->fourth_par};
@@ -126,18 +162,36 @@ static bool set_command(command_t *command, char *line) {
 /** @brief Czyta linię z wejścia i przetwarza ją na komendę.
  * Czyta daną linię z wejścia i zapisuje
  * odczytane dane na zmiennej @p command.
- * @param[out] command  – komenda.
+ * @param[out] command      – komenda,
+ * @param[out] lines        – wskaźnik na aktualną liczbę linii wejścia.
  * @return Wartość @p true jeśli się powiodło
- * lub wartość @p false jeśli zaszedł błąd.
+ * lub wartość @p false jeśli zaszedł błąd
+ * lub zaszedł koniec wejścia.
  */
-bool read_command(command_t *command) {
-    char *line = get_current_line();
-    if(feof(stdin)) {
-        assert(line != NULL);
-        return strlen(line) == 0;
+bool read_command(command_t *command, uint32_t *lines) {
+    bool is_reading_command_finished = false;
+    char *line = NULL;
+    while(!is_reading_command_finished) {
+        line = get_current_line();
+        if(line == NULL) {
+            is_reading_command_finished = true;
+        }
+        else if(should_line_be_skipped(line)) {
+            (*lines)++;
+        }
+        else {
+            if(set_command(command, line)) {
+                is_reading_command_finished = true;
+            }
+            else {
+                print_error(*lines);
+                (*lines)++;
+            }
+        }
+        if(line != NULL) {
+            free(line);
+        }
     }
 
-    bool correct_params = set_command(command, line);
-    free(line);
-    return correct_params;
+    return line != NULL;
 }

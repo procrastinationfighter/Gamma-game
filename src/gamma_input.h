@@ -37,22 +37,14 @@ typedef struct command command_t;
  */
 void print_error(uint32_t lines);
 
-/** @brief Sprawdza, czy linię wejścia należy pominąć.
- * Sprawdza, czy linia nie składa się z komentarza
- * lub pojedyczego znaku końca linii.
- * @param command           – polecenie.
- * @return Wartość @p true jeśli znak komendy jest
- * znakiem komentarza lub znakiem końca linii.
- */
-static bool should_line_be_skipped(command_t *command);
-
 /** @brief Czyta linię z wejścia i przetwarza ją na komendę.
  * Czyta daną linię z wejścia i zapisuje
  * odczytane dane na zmiennej @p command.
- * @param[out] command  – komenda.
+ * @param[out] command      – komenda,
+ * @param[out] lines        – wskaźnik na aktualną liczbę linii wejścia.
  * @return Wartość @p true jeśli się powiodło
  * lub wartość @p false jeśli zaszedł błąd.
  */
-bool read_command(command_t *command);
+bool read_command(command_t *command, uint32_t *lines);
 
 #endif //GAMMA_GAMMA_INPUT_H

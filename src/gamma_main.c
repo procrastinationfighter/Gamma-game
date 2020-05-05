@@ -72,8 +72,8 @@ static bool is_command_sign_correct(char sign) {
 
 /** @brief Sprawdza poprawność polecenia utworzenia nowej gry.
  * Sprawdza, czy parametry mieszczą się w zakresie typu uint32_t,
- * czy znak polecenia jest poprawny oraz czy linia nie powinna zostać
- * pominięta. Jeśli parametry lub znak jest niepoprawny, wypisuje
+ * czy znak polecenia jest poprawny.
+ * Jeśli parametry lub znak jest niepoprawny, wypisuje
  * informację o błędzie.
  * @param[in] command           – polecenie,
  * @param[in] lines             – numer aktualnej linii.
@@ -82,10 +82,6 @@ static bool is_command_sign_correct(char sign) {
  * lub @p false w przeciwnym wypadku.
  */
 static bool check_command_correctness(command_t *command, uint32_t lines) {
-    if(should_line_be_skipped(command)) {
-        return false;
-    }
-    else {
         if(are_parameters_in_bound(command) &&
            is_command_sign_correct(command->type)) {
             return true;
@@ -94,7 +90,6 @@ static bool check_command_correctness(command_t *command, uint32_t lines) {
             print_error(lines);
             return false;
         }
-    }
 }
 
 /** @brief Uruchamia odpowiedni tryb.
@@ -102,17 +97,25 @@ static bool check_command_correctness(command_t *command, uint32_t lines) {
  * @p command, uruchamia odpowiedni tryb.
  * @param command       – polecenie.
  * @param lines         – wskaźnik na numer aktualnej linii wejścia.
+ * @return Wartość @p true jeśli udało się stworzyć grę
+ * lub @p false w przeciwnym wypadku.
  */
-static void run_mode(command_t *command, uint32_t *lines) {
+static bool run_mode(command_t *command, uint32_t *lines) {
     game_pointer = gamma_new(command->first_par, command->second_par,
                              command->third_par, command->fourth_par);
-    if(command->type == BATCH_MODE_SYMBOL) {
-        printf("OK %iu\n", *lines);
+    if(game_pointer == NULL) {
+        print_error(*lines);
+        return false;
+    }
+    else if(command->type == BATCH_MODE_SYMBOL) {
+        printf("OK %u\n", *lines);
         run_batch_mode(game_pointer, lines);
     }
     else {
         run_interactive_mode(game_pointer);
     }
+
+    return true;
 }
 
 int main() {
@@ -123,16 +126,17 @@ int main() {
     command_t command;
     while(!feof(stdin) && !right_command) {
         lines++;
-        if(read_command(&command)) {
+        if(read_command(&command, &lines)) {
             right_command = check_command_correctness(&command, lines);
         }
-        else {
+        else if(!feof(stdin)){
             print_error(lines);
+        }
+
+        if(right_command) {
+            right_command = run_mode(&command, &lines);
         }
     }
 
-    if(right_command) {
-        run_mode(&command, &lines);
-    }
     return 0;
 }

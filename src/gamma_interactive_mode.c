@@ -7,3 +7,11 @@
  */
 
 #include "gamma_interactive_mode.h"
+
+/** @brief Uruchamia tryb interaktywny gry gamma.
+ * Uruchamia i przeprowadza grę w trybie interaktywnym.
+ * @param game          – struktura gry.
+ */
+void run_interactive_mode(gamma_t *game) {
+
+}
