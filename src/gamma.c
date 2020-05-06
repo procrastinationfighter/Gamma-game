@@ -1006,27 +1006,30 @@ static char digit_to_char(uint32_t digit) {
     return (char) (digit + (uint32_t) '0');
 }
 
-/** @brief Umieszcza na planszy do wypisania liczbę wielocyfrową.
- * Zamienia liczbę wielocyfrową @p number na ciąg znaków i umieszcza
- * ją w tablicy znaków @p s.
+/** @brief Umieszcza na planszy do wypisania liczbę.
+ * Zamienia liczbę @p number na ciąg znaków i umieszcza
+ * ją w tablicy znaków @p s. Zostawia jedno wolne miejsce " " po liczbie.
  * @param[in,out] s         – tablica znaków symbolizująca planszę,
  * @param[in] number        – liczba, która ma zostać wypisana na planszę,
- *                            wartość większa od 9,
- * @param[in, out] length   – aktualna długość tablicy @p s.
+ * @param[in, out] length   – aktualna długość tablicy @p s,
+ * @param[in] player_width  –
  */
-static void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) {
-    s[*length] = '[';
-    (*length)++;
+static void number_to_char(char *s, uint32_t number, uint64_t *length,
+                                                uint32_t player_width) {
     uint32_t digits = (uint32_t) log10(number) + 1;
     uint32_t divider = pow(10, digits - 1);
-    for (uint32_t i = 0; i < digits; i++) {
+    uint32_t i;
+    for (i = 0; i < digits; i++) {
         s[*length] = digit_to_char(number / divider);
         number = number % divider;
         divider /= 10;
         (*length)++;
     }
-    s[*length] = ']';
-    (*length)++;
+    while(i < player_width) {
+        s[*length] = ' ';
+        i++;
+        (*length)++;
+    }
 }
 
 /** @brief Oblicza rozmiar tablicy znaków do wypisania.
@@ -1038,20 +1041,18 @@ static void parse_multidigit_number(char *s, uint32_t number, uint64_t *length) 
  * reprezentującej planszę @p g.
  */
 static uint64_t how_many_characters_will_map_have(gamma_t *g) {
-    //Jedna komórka dla każdego pola i dodatkowa kolumna na znaki '\n'.
-    uint64_t size = ((uint64_t) g->board_height * (uint64_t) (g->board_width + 1));
-    //Każdy gracz o indeksie większym od 9, zajmie na planszy
-    //dodatkowe 2 miejsca na nawiasy '[', ']'
-    //i ilość cyfr w indeksie pomniejszoną o 1.
-    uint32_t next_limiter = 99;
-    uint32_t bonus_characters = 3;
-    for (uint32_t i = 9; i < g->players_count; i++) {
-        if (i == next_limiter) {
-            next_limiter = next_limiter * 10 + 9;
-            bonus_characters++;
-        }
-        size += g->players[i].number_of_fields * bonus_characters;
+    // Każdy gracz zajmie tyle znaków, ile znaków
+    // ma gracz o największym numerze. Jeśli
+    // graczy jest przynajmniej 10, po każdym
+    // wystąpi jeszcze jedna spacja.
+    uint64_t size = ((uint64_t) g->board_height * (uint64_t) (g->board_width));
+    if(g->players_count >= 10) {
+        uint32_t multiplier = log10(g->players_count) + 2;
+        size *= multiplier;
     }
+
+    // Miejsce na kolumnę znaków \n.
+    size += g->board_height;
     //Jedna komórka dla znaku '\0'
     size++;
 
@@ -1073,6 +1074,10 @@ char* gamma_board(gamma_t *g) {
     uint64_t array_size = how_many_characters_will_map_have(g);
     char *map_string = malloc(array_size * sizeof(char));
     uint64_t curr_index = 0;
+    uint32_t player_width = log10(g->players_count) + 1;
+    if(g->players_count > 9) {
+        player_width++;
+    }
     if (map_string == NULL) {
         return NULL;
     }
@@ -1080,16 +1085,16 @@ char* gamma_board(gamma_t *g) {
     for (uint32_t y = g->board_height; y > 0; y--) {
         for (uint32_t x = 0; x < g->board_width; x++) {
             uint32_t owner = g->fields[x][y - 1].owner_index;
-            if (owner > 9) {
-                parse_multidigit_number(map_string, owner, &curr_index);
-            }
-            else if (owner == DEFAULT_PLAYER_NUMBER) {
+            if (owner == DEFAULT_PLAYER_NUMBER) {
                 map_string[curr_index] = DEFAULT_PLAYER_IDENTIFIER;
                 curr_index++;
+                for(uint32_t i = 1; i < player_width; i++) {
+                    map_string[curr_index] = ' ';
+                    curr_index++;
+                }
             }
             else {
-                map_string[curr_index] = digit_to_char(owner);
-                curr_index++;
+                number_to_char(map_string, owner, &curr_index, player_width);
             }
         }
         map_string[curr_index] = '\n';

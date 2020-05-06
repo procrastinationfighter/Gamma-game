@@ -9,11 +9,13 @@
 #define GAMMA_GAMMA_INTERACTIVE_MODE_H
 
 #include "gamma.h"
+#include "gamma_input.h"
 
 /** @brief Uruchamia tryb interaktywny gry gamma.
  * Uruchamia i przeprowadza grę w trybie interaktywnym.
- * @param game          – struktura gry.
+ * @param[in,out] game          – struktura gry,
+ * @param[in] command           – komenda użyta do stworzenia gry.
  */
-void run_interactive_mode(gamma_t *game);
+void run_interactive_mode(gamma_t *game, command_t *command);
 
 #endif //GAMMA_GAMMA_INTERACTIVE_MODE_H

@@ -112,7 +112,7 @@ static bool run_mode(command_t *command, uint32_t *lines) {
         run_batch_mode(game_pointer, lines);
     }
     else {
-        run_interactive_mode(game_pointer);
+        run_interactive_mode(game_pointer, command);
     }
 
     return true;
