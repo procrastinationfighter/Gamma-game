@@ -30,16 +30,6 @@
 #define clear_line() printf("\033[2K\033[1G")
 
 /**
- * Makro używane do schowania kursora w terminalu.
- */
-#define hide_cursor() printf("\033[?25l")
-
-/**
- * Makro używane do przywrócenia kursora w terminalu.
- */
-#define show_cursor() printf("\033[?25h");
-
-/**
  * Makro odpowiadające liczbie, która odpowiada znakowi
  * symbolizującemu zakończenie gry.
  */
@@ -142,6 +132,19 @@ static void free_board_pointer() {
     if(board_pointer != NULL) {
         free(board_pointer);
     }
+}
+
+/** @brief Przywraca widoczność kursora.
+ */
+static void show_cursor() {
+    printf("\033[?25h");
+}
+
+/** @brief Usuwa widoczność kursora.
+ */
+static void hide_cursor() {
+    printf("\033[?25l");
+    atexit(show_cursor);
 }
 
 /** @brief Wypisuje wiadomość zachęcającą gracza do ruchu.
@@ -351,6 +354,8 @@ static bool play_turn(game_information *game_info, uint32_t curr_player) {
             case MAKE_GOLDEN_MOVE:
                 finished = make_golden_move(game_info, curr_player);
                 break;
+            case EOF:
+                exit(EXIT_FAILURE);
             default:
                 break;
         }
@@ -435,5 +440,4 @@ void run_interactive_mode(gamma_t *game, command_t *command) {
     struct game_information game_info;
     initialize_game(&game_info, game, command);
     run_game(&game_info);
-    show_cursor()
 }

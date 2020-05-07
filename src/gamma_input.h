@@ -21,12 +21,15 @@
  */
 #define BLANK_PARAMETER_NUMBER -42
 
+/**
+ * Struktura przechowująca wczytaną komendę.
+ */
 struct command {
-    char type;
-    long first_par;
-    long second_par;
-    long third_par;
-    long fourth_par;
+    char type;          ///< Pierwszy znak linii, symbolizuje typ polecenia.
+    long first_par;     ///< Pierwszy parametr.
+    long second_par;    ///< Drugi parametr.
+    long third_par;     ///< Trzeci parametr.
+    long fourth_par;    ///< Czwarty parametr.
 };
 typedef struct command command_t;
 

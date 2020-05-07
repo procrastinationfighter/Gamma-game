@@ -1,7 +1,7 @@
 /** @file
  * Implementacja modułu obsługującego tryb raw w terminalu.
  *
- * @source https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
+ * Źródło: https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
  */
 #include "raw_mode.h"
 struct termios orig_termios;

@@ -1,7 +1,7 @@
 /** @file
  * Interfejs modułu obsługującego tryb raw w terminalu.
  *
- * @source https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
+ * Źródło: https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
  */
 #ifndef RAW_MODE
 #define RAW_MODE

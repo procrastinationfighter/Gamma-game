@@ -13,8 +13,6 @@
 #include <string.h>
 #include <stdint.h>
 #include <limits.h>
-#include <errno.h>
-#include <assert.h>
 #include <ctype.h>
 
 /** @brief Wypisuje informacje o błędzie.
