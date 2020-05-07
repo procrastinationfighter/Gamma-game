@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <math.h>
+#include <ctype.h>
 
 /**
  * Makro używane do usuwania wszystkich znaków z ekranu.
@@ -138,14 +139,30 @@ static void free_board_pointer() {
     }
 }
 
+/** @brief Wypisuje wiadomość zachęcającą gracza do ruchu.
+ * @param[in] game_info         - informacje o grze,
+ * @param[in] curr_player       - indeks gracza.
+ */
+static void print_player_message(game_information *game_info, uint32_t curr_player) {
+    if(curr_player > 0) {
+        printf("TURN OF PLAYER %d, PLEASE MAKE A MOVE \n", curr_player);
+        printf("FREE FIELDS: %lu, GOLDEN MOVE ",
+                gamma_free_fields(game_info->game, curr_player));
+        if(!gamma_golden_possible(game_info->game, curr_player)) {
+            printf("NOT ");
+        }
+        printf("POSSIBLE\n");
+    }
+}
+
 /** @brief Wypisuje aktualny stan planszy z zaznaczonym polem.
  * Wypisuje aktualny stan planszy na podstawie informacji
  * zawartych w strukturze @p game_info. Jeśli składowa
  * @p board tej struktury ma wartość NULL, wywołuje funkcję
  * @ref gamma_board.
- * @param game_info          – informacje na temat gry.
+ * @param[in] game_info          – informacje na temat gry.
  */
-static void print_board(game_information *game_info) {
+static void print_board(game_information *game_info, uint32_t curr_player) {
     clear_screen();
     if(game_info->board == NULL) {
         game_info->board = gamma_board(game_info->game);
@@ -175,13 +192,14 @@ static void print_board(game_information *game_info) {
         printf("%c", game_info->board[l]);
         l++;
     }
+    print_player_message(game_info, curr_player);
 }
 
 /** @brief Sprawdza, czy znak odpowiada wciśnięciu strzałki.
  * Sprawdza, czy podana liczba symbolizuje znak
  * odpowiadający jednej z liter występujących
  * w łańcuchach oznaczających wciśnięcie strzałki
- * @param ch            – liczba, w zakresie typu char.
+ * @param[in] ch            – liczba, w zakresie typu char.
  * @return Wartość @p true jeśli liczba odpowiada
  * takiemu znakowi lub @p false w przeciwnym wypadku.
  */
@@ -193,10 +211,11 @@ static bool is_character_arrow_symbol(int ch) {
 /** @brief Przemieszcza kursor na planszy.
  * Przemieszcza kursor gracza na planszy
  * na podstawie wciśniętego klawisza.
- * @param ch            – znak oznaczający kierunek,
- * @param game_info     – informacje o grze.
+ * @param[in] ch                – znak oznaczający kierunek,
+ * @param[in,out] game_info     – informacje o grze,
+ * @param[in] curr_player       - indeks obecnego gracza.
  */
-static void move_cursor(int ch, game_information *game_info) {
+static void move_cursor(int ch, game_information *game_info, uint32_t curr_player) {
     switch (ch) {
         case ARROW_UP:
             if(game_info->curr_y < game_info->max_height - 1) {
@@ -221,7 +240,7 @@ static void move_cursor(int ch, game_information *game_info) {
         default:
             break;
     }
-    print_board(game_info);
+    print_board(game_info, curr_player);
 }
 
 /** @brief Czyta z wejścia wciśnięcie strzałki na klawiaturze.
@@ -231,14 +250,15 @@ static void move_cursor(int ch, game_information *game_info) {
  * a drugi jedną z liter A, B, C, D to właśnie
  * wczytano wciśnięcie strzałki i zostaje
  * wykonany ruch kursora.
- * @param game_info         - informacje o grze.
+ * @param[in,out] game_info     - informacje o grze,
+ * @param[in] curr_player       - indeks obecnego gracza.
  */
-static void read_arrow_key(game_information *game_info) {
+static void read_arrow_key(game_information *game_info, uint32_t curr_player) {
     int d = getchar();
     if(d == LEFT_BRACKET) {
         int f = getchar();
         if(is_character_arrow_symbol(f)) {
-            move_cursor(f, game_info);
+            move_cursor(f, game_info, curr_player);
         }
         else {
             ungetc(f, stdin);
@@ -259,8 +279,8 @@ static void print_move_error() {
 
 /** @brief Wykonuje ruch danego gracza.
  * Wykonuje ruch w imieniu gracza o indeksie @p curr_player.
- * @param game_info         - informacje o grze,
- * @param curr_player       - indeks gracza.
+ * @param[in,out] game_info     - informacje o grze,
+ * @param[in] curr_player       - indeks gracza.
  * @return Wartość @p true jeśli ruch był prawidłowy
  * lub wartość @p false w przeciwnym wypadku.
  */
@@ -281,8 +301,8 @@ static bool make_move(game_information *game_info, uint32_t curr_player) {
 
 /** @brief Wykonuje złoty ruch danego gracza.
  * Wykonuje złoty ruch w imieniu gracza o indeksie @p curr_player.
- * @param game_info         - informacje o grze,
- * @param curr_player       - indeks gracza.
+ * @param[in,out] game_info     - informacje o grze,
+ * @param[in] curr_player       - indeks gracza.
  * @return Wartość @p true jeśli ruch był prawidłowy
  * lub wartość @p false w przeciwnym wypadku.
  */
@@ -305,18 +325,20 @@ static bool make_golden_move(game_information *game_info, uint32_t curr_player) 
  * Wczytuje z wejścia znaki do momentu aż gracz
  * wykona poprawny ruch, zrezygnuje z ruchu
  * lub zostanie wciśnięty klawisz kończący grę.
- * @param game_info            - informacje o grze,
- * @param curr_player          - indeks obecnego gracza.
- * @return
+ * @param[in,out] game_info        - informacje o grze,
+ * @param[in] curr_player          - indeks obecnego gracza.
+ * @return Wartość @p true jeśli gra powinna toczyć się dalej
+ * lub @p false jeśli po tym ruchu gra powinna się skończyć.
  */
 static bool play_turn(game_information *game_info, uint32_t curr_player) {
     int ch;
     bool finished = false;
+    print_board(game_info, curr_player);
     do {
-        ch = getchar();
+        ch = tolower(getchar());
         switch (ch) {
             case ESCAPE_SYMBOL:
-                read_arrow_key(game_info);
+                read_arrow_key(game_info, curr_player);
                 break;
             case MAKE_MOVE:
                 finished = make_move(game_info, curr_player);
@@ -332,8 +354,46 @@ static bool play_turn(game_information *game_info, uint32_t curr_player) {
     return (ch != END_GAME_SYMBOL);
 }
 
+static void print_game_result(game_information *game_info) {
+    print_board(game_info, 0);
+    for(uint32_t i = 0; i < game_info->max_players; i++) {
+        printf("PLAYER %u: %lu OWNED FIELDS\n",
+                i + 1, gamma_busy_fields(game_info->game, i + 1));
+    }
+    printf("THANKS FOR PLAYING!\n");
+}
+
+/** @brief Przeprowadza grę w trybie interaktywnym.
+ * Przeprowadza grę w trybie interaktywnym.
+ * Gra kończy się, gdy żaden gracz nie ma już ruchu
+ * lub wciśnięto kombinację klawiszy oznaczającą koniec.
+ * Więcej informacji w moodlu.
+ * @param[in,out] game_info          - informacje o grze.
+ */
 static void run_game(game_information *game_info) {
-    //todo
+    bool game_finished = false;
+    uint32_t players_skipped;
+    while(!game_finished) {
+        players_skipped = 0;
+        for(uint32_t i = 0; i < game_info->max_players; i++) {
+            if(gamma_golden_possible(game_info->game, i + 1) ||
+                    gamma_free_fields(game_info->game, i + 1)) {
+                game_finished = !play_turn(game_info, i + 1);
+                if(game_finished) {
+                    break;
+                }
+            }
+            else {
+                players_skipped++;
+            }
+        }
+
+        if(players_skipped == game_info->max_players) {
+            game_finished = true;
+        }
+    }
+
+    print_game_result(game_info);
 }
 
 /** @brief Inicjalizuje strukturę z informacjami o grze.
@@ -350,8 +410,6 @@ static void initialize_game(struct game_information *game_info,
     game_info->curr_x = 0;
     game_info->curr_y = 0;
     game_info->board = NULL;
-    clear_screen();
-    print_board(game_info);
     atexit(free_board_pointer);
 }
 
