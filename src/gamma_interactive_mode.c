@@ -9,15 +9,20 @@
 #include "gamma_interactive_mode.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <termios.h>
 #include <math.h>
 #include <ctype.h>
+#include "raw_mode.h"
+
+/**
+ * Makro używane do usuwania wszystkich znaków z ekranu
+ * bez usuwania wcześniejszych wiadomości.
+ */
+#define clear_screen_without_deleting() printf("\033[2J\033[1;1H")
 
 /**
  * Makro używane do usuwania wszystkich znaków z ekranu.
  */
-#define clear_screen() printf("\033[2J\033[1;1H")
+#define clear_screen() printf("\033[1;1H\033[0J")
 
 /**
  * Makro używane do usuwania wszystkich znaków z danej linii.
@@ -354,6 +359,10 @@ static bool play_turn(game_information *game_info, uint32_t curr_player) {
     return (ch != END_GAME_SYMBOL);
 }
 
+/** @brief Wypisuje wynik gry.
+ * Wypisuje ilość pól posiadanych przez każdego gracza.
+ * @param[in] game_info             - informacje o grze.
+ */
 static void print_game_result(game_information *game_info) {
     print_board(game_info, 0);
     for(uint32_t i = 0; i < game_info->max_players; i++) {
@@ -411,25 +420,8 @@ static void initialize_game(struct game_information *game_info,
     game_info->curr_y = 0;
     game_info->board = NULL;
     atexit(free_board_pointer);
+    clear_screen_without_deleting();
 }
-
-// kod z https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
-struct termios orig_termios;
-
-void disableRawMode() {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-}
-
-void enableRawMode() {
-    tcgetattr(STDIN_FILENO, &orig_termios);
-    atexit(disableRawMode);
-
-    struct termios raw = orig_termios;
-    raw.c_lflag &= ~(ECHO | ICANON);
-
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-}
-// Koniec kodu z neta
 
 /** @brief Uruchamia tryb interaktywny gry gamma.
  * Uruchamia i przeprowadza grę w trybie interaktywnym.

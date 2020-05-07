@@ -853,8 +853,6 @@ static void update_player_adjacent_fields_after_removing(gamma_t *g, uint32_t pl
     g->players[player - 1].adjacent_fields -= removed_fields;
 }
 
-//True if removal was legal(player would not be left with more areas than he should own),
-// false otherwise. Assumes correct parameters.
 /** @brief Usuwa pionek gracza z danego pola.
  * Usuwa pionek gracza @p player z pola (@p x, @p y).
  * Aktualizuje też liczbę obszarów i sąsiednich pól, które posiada
