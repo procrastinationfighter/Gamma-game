@@ -180,7 +180,7 @@ static void print_board(game_information *game_info, uint32_t curr_player) {
 
     for(uint32_t i = 0; i < game_info->max_height; i++) {
         for(uint32_t j = 0; j < game_info->max_width; j++) {
-            if(i == line && j == column) {
+            if(i == line && j == column && curr_player != 0) {
                 printf("\x1b[104m");
             }
             for(uint32_t k = 0; k < player_width; k++) {
