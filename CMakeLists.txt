@@ -29,17 +29,25 @@ set(SOURCE_FILES
         src/gamma_batch_mode.h
         src/gamma_main.c
         src/gamma_interactive_mode.c
-        src/gamma_interactive_mode.h src/gamma_input.c src/gamma_input.h src/raw_mode.h src/raw_mode.c)
+        src/gamma_interactive_mode.h
+        src/gamma_input.c
+        src/gamma_input.h
+        src/raw_mode.h
+        src/raw_mode.c)
 
-set(TEST_SOURCE_FILES
+# Pliki źródłowe do testowania silnika.
+set(ENGINE_TEST_SOURCE_FILES
         src/gamma.c
         src/gamma.h
         src/gamma_test.c
         src/gamma_field.c
         src/gamma_field.h)
 
-# Wskazujemy plik wykonywalny.
+# Wskazujemy plik wykonywalny dla całego programu.
 add_executable(gamma ${SOURCE_FILES})
+
+# Wskazujemy plik wykonywalny dla testów silnika.
+add_executable(gamma_engine EXCLUDE_FROM_ALL ${ENGINE_TEST_SOURCE_FILES})
 
 # Dodajemy obsługę Doxygena: sprawdzamy, czy jest zainstalowany i jeśli tak to:
 find_package(Doxygen)
