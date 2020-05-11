@@ -13,11 +13,18 @@ static void disableRawMode() {
 
 /** @brief Włącza tryb raw. */
 void enableRawMode() {
-    tcgetattr(STDIN_FILENO, &orig_termios);
+    int error_control;
+    error_control = tcgetattr(STDIN_FILENO, &orig_termios);
+    if(error_control == -1) {
+        exit(EXIT_FAILURE);
+    }
     atexit(disableRawMode);
 
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
 
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    error_control = tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    if(error_control == -1) {
+        exit(EXIT_FAILURE);
+    }
 }

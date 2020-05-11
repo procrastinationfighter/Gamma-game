@@ -51,6 +51,7 @@ void field_queue_push(field_queue *q, gamma_field *element) {
     if(q != NULL) {
         queue_element *el = malloc(sizeof(queue_element));
         if(el == NULL) {
+            field_queue_clear(&q);
             errno = ENOMEM;
             exit(EXIT_FAILURE);
         }
@@ -105,11 +106,13 @@ bool field_queue_is_empty(field_queue *q) {
  * @param[in,out] q    – wskaźnik na strukturę kolejki.
  */
 void field_queue_clear(field_queue **q) {
-    while(!field_queue_is_empty(*q)) {
-        field_queue_pop(*q);
+    if(*q != NULL) {
+        while (!field_queue_is_empty(*q)) {
+            field_queue_pop(*q);
+        }
+        free(*q);
+        *q = NULL;
     }
-    free(*q);
-    *q = NULL;
 }
 
 /** @brief Znajduje korzeń danego pola.
