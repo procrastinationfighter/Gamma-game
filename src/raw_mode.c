@@ -3,6 +3,7 @@
  *
  * Źródło: https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
  */
+#include <stdio.h>
 #include "raw_mode.h"
 struct termios orig_termios;
 
@@ -13,18 +14,19 @@ static void disableRawMode() {
 
 /** @brief Włącza tryb raw. */
 void enableRawMode() {
-    int error_control;
-    error_control = tcgetattr(STDIN_FILENO, &orig_termios);
-    if(error_control == -1) {
-        exit(EXIT_FAILURE);
-    }
-    atexit(disableRawMode);
+    if(isatty(STDIN_FILENO)) {
+        int error_control = tcgetattr(STDIN_FILENO, &orig_termios);
+        if (error_control == -1) {
+            exit(EXIT_FAILURE);
+        }
+        atexit(disableRawMode);
 
-    struct termios raw = orig_termios;
-    raw.c_lflag &= ~(ECHO | ICANON);
+        struct termios raw = orig_termios;
+        raw.c_lflag &= ~(ECHO | ICANON);
 
-    error_control = tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-    if(error_control == -1) {
-        exit(EXIT_FAILURE);
+        error_control = tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+        if (error_control == -1) {
+            exit(EXIT_FAILURE);
+        }
     }
 }
