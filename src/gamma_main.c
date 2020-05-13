@@ -66,7 +66,7 @@ static bool are_parameters_in_bound(command_t *command) {
  * @return Wartość @p true jeśli symbol jest poprawny
  * lub @p false w przeciwnym wypadku.
  */
-static bool is_command_sign_correct(char sign) {
+static inline bool is_command_sign_correct(char sign) {
     return (sign == INTERACTIVE_MODE_SYMBOL || sign == BATCH_MODE_SYMBOL);
 }
 

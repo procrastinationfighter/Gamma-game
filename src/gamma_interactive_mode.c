@@ -136,13 +136,13 @@ static void free_board_pointer() {
 
 /** @brief Przywraca widoczność kursora.
  */
-static void show_cursor() {
+static inline void show_cursor() {
     printf("\033[?25h");
 }
 
 /** @brief Usuwa widoczność kursora.
  */
-static void hide_cursor() {
+static inline void hide_cursor() {
     printf("\033[?25l");
     atexit(show_cursor);
 }
@@ -211,7 +211,7 @@ static void print_board(game_information *game_info, uint32_t curr_player) {
  * @return Wartość @p true jeśli liczba odpowiada
  * takiemu znakowi lub @p false w przeciwnym wypadku.
  */
-static bool is_character_arrow_symbol(int ch) {
+static inline bool is_character_arrow_symbol(int ch) {
     return (ch == ARROW_UP || ch == ARROW_DOWN ||
             ch == ARROW_LEFT || ch == ARROW_RIGHT);
 }
@@ -280,7 +280,7 @@ static void read_arrow_key(game_information *game_info, uint32_t curr_player) {
 
 /** @brief Informuje gracza o błędnym ruchu.
  */
-static void print_move_error() {
+static inline void print_move_error() {
     clear_line();
     printf("MOVE NOT POSSIBLE. TRY AGAIN.");
 }

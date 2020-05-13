@@ -49,7 +49,7 @@
  * @return Wartość @p true jeśli wyraz symbolizuje poprawne polecenie
  * lub @p false w przeciwnym wypadku.
  */
-static bool is_command_valid(char ch) {
+static inline bool is_command_valid(char ch) {
     return (ch == CALL_GAMMA_BOARD || ch == CALL_GAMMA_BUSY_FIELDS
             || ch == CALL_GAMMA_FREE_FIELDS || ch == CALL_GAMMA_GOLDEN_MOVE
             || ch == CALL_GAMMA_GOLDEN_POSSIBLE || ch == CALL_GAMMA_MOVE);
@@ -112,7 +112,7 @@ static bool are_parameters_in_bound(command_t *command) {
  * @return Wartość @p true jeśli znak oraz parametry są poprawne
  * lub @p false w przeciwnym wypadku.
  */
-static bool are_parameters_correct(command_t *command) {
+static inline bool are_parameters_correct(command_t *command) {
     return is_command_valid(command->type) &&
            is_parameter_count_correct(command) &&
            are_parameters_in_bound(command);

@@ -61,7 +61,7 @@ struct gamma {
  * @return Wartość @p true, jeśli wszystkie parametry są większe od zera,
  * lub false jeśli którykolwiek jest równy zero.
  */
-static bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
+static inline bool are_gamma_new_parameters_valid(uint32_t width, uint32_t height,
                                            uint32_t players, uint32_t areas) {
     return !(width == 0 || height == 0 || players == 0 || areas == 0);
 }
@@ -288,7 +288,7 @@ void gamma_delete(gamma_t *g) {
  * @return Wartość @p true, jeśli parametr znajduje się w podanym zakresie
  * lub @p false w przeciwnym wypadku.
  */
-static bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
+static inline bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
     return !(player == 0 || player > g->players_count);
 }
 
@@ -304,7 +304,7 @@ static bool is_player_parameter_valid(gamma_t *g, uint32_t player) {
  * @return Wartość @p true, jeśli parametry znajduje się we właściwych zakresacj
  * lub @p false w przeciwnym wypadku.
  */
-static bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
+static inline bool are_gamma_move_parameters_valid(gamma_t *g, uint32_t player,
                                             uint32_t x, uint32_t y) {
     return (g != NULL && x < g->board_width && y < g->board_height &&
             is_player_parameter_valid(g, player));
@@ -447,7 +447,7 @@ static uint32_t add_and_unite_field(gamma_t *g, uint32_t player,
  * @return Wartość @p true jeśli pole należy do innego gracza
  *         lub wartość @p false w przeciwnym wypadku.
  */
-static bool does_field_belong_to_other_player(gamma_field *field, uint32_t player) {
+static inline bool does_field_belong_to_other_player(gamma_field *field, uint32_t player) {
     return (field->owner_index != DEFAULT_PLAYER_NUMBER &&
             field->owner_index != player);
 }
@@ -643,7 +643,7 @@ static void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
  * @return Wartosć @p true jeśli pole spełnia powyższe warunki
  *         lub wartość @p false, jeśli ich nie spełnia.
  */
-static bool should_field_be_visited(gamma_field *field, uint32_t player,
+static inline bool should_field_be_visited(gamma_field *field, uint32_t player,
                                     bool **visited_map) {
     return (field->owner_index == player &&
             !visited_map[field->this_x][field->this_y]);
@@ -1000,7 +1000,7 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
  * @param[in] digit   – cyfra
  * @return Znak odpowiadający cyfrze @p digit.
  */
-static char digit_to_char(uint32_t digit) {
+static inline char digit_to_char(uint32_t digit) {
     return (char) (digit + (uint32_t) '0');
 }
 
@@ -1071,13 +1071,14 @@ char* gamma_board(gamma_t *g) {
     }
     uint64_t array_size = how_many_characters_will_map_have(g);
     char *map_string = malloc(array_size * sizeof(char));
+    if (map_string == NULL) {
+        return NULL;
+    }
+
     uint64_t curr_index = 0;
     uint32_t player_width = log10(g->players_count) + 1;
     if(g->players_count > 9) {
         player_width++;
-    }
-    if (map_string == NULL) {
-        return NULL;
     }
 
     for (uint32_t y = g->board_height; y > 0; y--) {

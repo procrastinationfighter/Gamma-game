@@ -97,7 +97,7 @@ gamma_field* field_queue_pop(field_queue *q) {
  * @return Wartość @p true, jeśli w kolejce nie ma elementów
  * lub wartość @p false jeśli kolejka zawiera elementy.
  */
-bool field_queue_is_empty(field_queue *q) {
+inline bool field_queue_is_empty(field_queue *q) {
     return q->front == NULL;
 }
 
@@ -176,6 +176,6 @@ bool unite_fields(gamma_field *f1, gamma_field *f2, gamma_field **board) {
  * @return Wartość @p true, jeśli pole jest korzeniem
  * lub wartość @p false w przeciwnym wypadku.
  */
-bool is_field_root(gamma_field *f) {
+inline bool is_field_root(gamma_field *f) {
     return (f->this_x == f->parent_x && f->this_y == f->parent_y);
 }

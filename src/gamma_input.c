@@ -19,7 +19,7 @@
  * Wypisuje informację o błędzie oraz numer linii, w którym wystąpił.
  * @param[in] lines     – liczba linii wejścia przed uruchomieniem trybu.
  */
-void print_error(uint32_t lines) {
+inline void print_error(uint32_t lines) {
     fprintf(stderr, "ERROR %u\n", lines);
 }
 
@@ -30,7 +30,7 @@ void print_error(uint32_t lines) {
  * @return Wartość @p true jeśli znak komendy jest
  * znakiem komentarza lub znakiem końca linii.
  */
-static bool should_line_be_skipped(char *line) {
+static inline bool should_line_be_skipped(char *line) {
     return(line != NULL && strlen(line) > 0 &&
           (line[0] == COMMENT_SIGN || line[0] == '\n'));
 }
