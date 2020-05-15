@@ -138,9 +138,13 @@ static char * get_current_line() {
  * lub @p false w przeciwnym wypadku.
  */
 static bool set_command(command_t *command, char *line) {
+    char first = line[0];
     char delim[] = " \n\t\v\f\r";
     char *com = strtok(line, delim);
     if(!is_first_word_correct(com)) {
+        return false;
+    }
+    else if(com[0] != first) {
         return false;
     }
     command->type = com[0];
