@@ -141,12 +141,10 @@ static bool set_command(command_t *command, char *line) {
     char first = line[0];
     char delim[] = " \n\t\v\f\r";
     char *com = strtok(line, delim);
-    if(!is_first_word_correct(com)) {
+    if(!is_first_word_correct(com) || com[0] != first) {
         return false;
     }
-    else if(com[0] != first) {
-        return false;
-    }
+
     command->type = com[0];
 
     long *params[4] = {&command->first_par, &command->second_par,
