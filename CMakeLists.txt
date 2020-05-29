@@ -35,11 +35,14 @@ set(SOURCE_FILES
         src/raw_mode.h
         src/raw_mode.c)
 
+# Zmienna, która pozwala zmienić nazwę pliku z testem z poziomu komendy cmake.
+set(TEST_FILE="src/gamma_test.c")
+
 # Pliki źródłowe do testowania silnika.
-set(ENGINE_TEST_SOURCE_FILES
+set(TEST_SOURCE_FILES
         src/gamma.c
         src/gamma.h
-        src/gamma_test.c
+        ${TEST_FILE}
         src/gamma_field.c
         src/gamma_field.h)
 
@@ -47,7 +50,8 @@ set(ENGINE_TEST_SOURCE_FILES
 add_executable(gamma ${SOURCE_FILES})
 
 # Wskazujemy plik wykonywalny dla testów silnika.
-add_executable(gamma_engine EXCLUDE_FROM_ALL ${ENGINE_TEST_SOURCE_FILES})
+add_executable(test EXCLUDE_FROM_ALL ${TEST_SOURCE_FILES})
+set_target_properties(test PROPERTIES OUTPUT_NAME gamma_test)
 
 # Dodajemy obsługę Doxygena: sprawdzamy, czy jest zainstalowany i jeśli tak to:
 find_package(Doxygen)
@@ -65,3 +69,4 @@ endif (DOXYGEN_FOUND)
 
 # Linkujemy bibliotekę math.h
 target_link_libraries(gamma m)
+target_link_libraries(test m)

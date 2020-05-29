@@ -60,7 +60,7 @@ static long parse_number(char *parameter) {
 }
 /** @brief Sprawdza, czy wyraz jest poprawną liczbą.
  * Sprawdza czy wyraz @p p składa się z samych cyfr.
- * @param p         – łańcuch znaków
+ * @param[in] p         – łańcuch znaków
  * @return Wartość @p true jeśli wyraz składa się z samych
  * cyfr lub jest NULLem lub wartość @p false w przeciwnym wypadku.
  */
@@ -84,7 +84,7 @@ static bool is_string_valid_number(const char *p) {
 /** @brief Sprawdza poprawność pierwszego wyrazu w linii.
  * Sprawdza, czy pierwszy wyraz w linii na pewno jest
  * wyrazem jednoliterowym oraz czy istnieje.
- * @param word              – słowo.
+ * @param[in] word              – słowo.
  * @return Wartość @p true jeśli słowo spełnia warunki
  * lub @p false w przeciwnym wypadku.
  */

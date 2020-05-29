@@ -26,7 +26,7 @@
 /**
  * Struktura przechowująca dane o jednym graczu.
  */
-typedef struct player {
+typedef struct {
     uint32_t number_of_areas;       ///< liczba obszarów w posiadaniu gracza
     uint32_t number_of_fields;      ///< liczba pól w posiadaniu gracza
     uint32_t adjacent_fields;       ///< liczba pól, na które gracz może postawić
@@ -611,22 +611,22 @@ static bool are_golden_move_parameters_valid(gamma_t *g, uint32_t player,
  */
 static void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
                                         uint32_t x, uint32_t y) {
-    if (x + 1 != g->board_width && g->fields[x + 1][y].owner_index == player) {
+    if (x + 1 < g->board_width && g->fields[x + 1][y].owner_index == player) {
         g->fields[x + 1][y].parent_x = g->fields[x + 1][y].this_x;
         g->fields[x + 1][y].parent_y = g->fields[x + 1][y].this_y;
     }
 
-    if (x != 0 && g->fields[x - 1][y].owner_index == player) {
+    if (x > 0 && g->fields[x - 1][y].owner_index == player) {
         g->fields[x - 1][y].parent_x = g->fields[x - 1][y].this_x;
         g->fields[x - 1][y].parent_y = g->fields[x - 1][y].this_y;
     }
 
-    if (y + 1 != g->board_height && g->fields[x][y + 1].owner_index == player) {
+    if (y + 1 < g->board_height && g->fields[x][y + 1].owner_index == player) {
         g->fields[x][y + 1].parent_x = g->fields[x][y + 1].this_x;
         g->fields[x][y + 1].parent_y = g->fields[x][y + 1].this_y;
     }
 
-    if (y != 0 && g->fields[x][y - 1].owner_index == player) {
+    if (y > 0 && g->fields[x][y - 1].owner_index == player) {
         g->fields[x][y - 1].parent_x = g->fields[x][y - 1].this_x;
         g->fields[x][y - 1].parent_y = g->fields[x][y - 1].this_y;
     }
@@ -644,7 +644,7 @@ static void set_adjacent_fields_as_root(gamma_t *g, uint32_t player,
  *         lub wartość @p false, jeśli ich nie spełnia.
  */
 static inline bool should_field_be_visited(gamma_field *field, uint32_t player,
-                                    bool **visited_map) {
+                                           bool **visited_map) {
     return (field->owner_index == player &&
             !visited_map[field->this_x][field->this_y]);
 }
@@ -664,28 +664,28 @@ static void add_adjacent_fields_to_queue(field_queue *queue, gamma_t *g,
     uint32_t curr_x = field->this_x;
     uint32_t curr_y = field->this_y;
 
-    if (curr_x + 1 != g->board_width &&
+    if (curr_x + 1 < g->board_width &&
         should_field_be_visited(&g->fields[curr_x + 1][curr_y],
                                 field->owner_index, g->visited_fields_board)) {
         field_queue_push(queue, &g->fields[curr_x + 1][curr_y]);
         g->visited_fields_board[curr_x + 1][curr_y] = true;
     }
 
-    if (curr_x != 0 &&
+    if (curr_x > 0 &&
         should_field_be_visited(&g->fields[curr_x - 1][curr_y],
                                 field->owner_index, g->visited_fields_board)) {
         field_queue_push(queue, &g->fields[curr_x - 1][curr_y]);
         g->visited_fields_board[curr_x - 1][curr_y] = true;
     }
 
-    if (curr_y + 1 != g->board_height &&
+    if (curr_y + 1 < g->board_height &&
         should_field_be_visited(&g->fields[curr_x][curr_y + 1],
                                 field->owner_index, g->visited_fields_board)) {
         field_queue_push(queue, &g->fields[curr_x][curr_y + 1]);
         g->visited_fields_board[curr_x][curr_y + 1] = true;
     }
 
-    if (curr_y != 0 &&
+    if (curr_y > 0 &&
         should_field_be_visited(&g->fields[curr_x][curr_y - 1],
                                 field->owner_index, g->visited_fields_board)) {
         field_queue_push(queue, &g->fields[curr_x][curr_y - 1]);
@@ -799,14 +799,14 @@ static void update_other_players_adjacent_fields_after_removing(gamma_t *g,
                                                                 uint32_t x, uint32_t y) {
     uint32_t players_checked[3];
     uint32_t players_count = 0;
-    if (x + 1 != g->board_width &&
+    if (x + 1 < g->board_width &&
         does_field_belong_to_other_player(&g->fields[x + 1][y], player)) {
         (g->players[g->fields[x + 1][y].owner_index - 1].adjacent_fields)++;
         players_checked[players_count] = g->fields[x + 1][y].owner_index;
         players_count++;
     }
 
-    if (x != 0 &&
+    if (x > 0 &&
         does_field_belong_to_other_player(&g->fields[x - 1][y], player) &&
         !was_player_adjacent_already_updated(g->fields[x - 1][y].owner_index,
                                              players_checked, players_count)) {
@@ -815,7 +815,7 @@ static void update_other_players_adjacent_fields_after_removing(gamma_t *g,
         players_count++;
     }
 
-    if (y + 1 != g->board_height &&
+    if (y + 1 < g->board_height &&
         does_field_belong_to_other_player(&g->fields[x][y + 1], player) &&
         !was_player_adjacent_already_updated(g->fields[x][y + 1].owner_index,
                                              players_checked, players_count)) {
@@ -824,7 +824,7 @@ static void update_other_players_adjacent_fields_after_removing(gamma_t *g,
         players_count++;
     }
 
-    if (y != 0 &&
+    if (y > 0 &&
         does_field_belong_to_other_player(&g->fields[x][y - 1], player) &&
         !was_player_adjacent_already_updated(g->fields[x][y - 1].owner_index,
                                              players_checked, players_count)) {
@@ -970,14 +970,151 @@ uint64_t gamma_free_fields(gamma_t *g, uint32_t player) {
     }
 }
 
-/** @brief Sprawdza, czy gracz może wykonać złoty ruch.
- * Sprawdza, czy gracz @p player jeszcze nie wykonał w tej rozgrywce złotego
- * ruchu i jest przynajmniej jedno pole zajęte przez innego gracza.
+/** @brief Przechodzi pola danego gracza w obrębie jednej składowej.
+ * Przechodzi wszystkie pola danego gracza, które
+ * po złotym ruchu należałyby do jednej składowej
+ * oraz łączą się z polem o współrzędnych (@p x, @p y).
+ * Uwaga - nie resetuje mapy odwiedzonych pól w strukturze @p g.
+ * @param[in, out] g        – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] x             – numer kolumny, mniejszy od składowej
+ *                          @p board_width ze zmiennej @p g,
+ * @param[in] y             – numer wiersza, mniejszy od składowej
+ *                          @p board_height ze zmiennej @p g.
+ */
+static void traverse_player_fields(gamma_t *g, uint32_t x, uint32_t y) {
+    field_queue *queue = NULL;
+    field_queue_init(&queue);
+    field_queue_push(queue, &g->fields[x][y]);
+    g->visited_fields_board[x][y] = true;
+
+    while (!field_queue_is_empty(queue)) {
+        gamma_field *curr_field = field_queue_pop(queue);
+        add_adjacent_fields_to_queue(queue, g, curr_field);
+    }
+    field_queue_clear(&queue);
+}
+
+/** @brief Sprawdza, czy gracz może wykonać złoty ruch na dane pole.
+ * Sprawdza, czy gracz o indekse @p player może wykonać
+ * złoty ruch na pole o współrzędnych (@p x, @p y)
+ * bez zwiększania liczby swoich obszarów.
+ * @param[in, out] g        – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] owner_index   – indeks gracza, liczba dodatnia
+ *                          i niewiększa od składowej @p players
+ *                          ze zmiennej @p g,
+ * @param[in] x             – numer kolumny, mniejszy od składowej
+ *                          @p board_width ze zmiennej @p g,
+ * @param[in] y             – numer wiersza, mniejszy od składowej
+ *                          @p board_height ze zmiennej @p g.
+ * @return Wartość @p true, jeśli gracz może wykonać złoty ruch
+ * lub @p false w przeciwnym wypadku.
+ */
+static uint32_t areas_left_after_golden_move(gamma_t *g, uint32_t owner_index,
+                                             uint32_t x, uint32_t y) {
+    uint32_t areas = 0;
+    g->visited_fields_board[x][y] = true;
+
+    if(x + 1 < g->board_width &&
+       should_field_be_visited(&g->fields[x + 1][y], owner_index, g->visited_fields_board)) {
+        areas++;
+        traverse_player_fields(g, x + 1, y);
+    }
+    if(x > 0 &&
+       should_field_be_visited(&g->fields[x - 1][y], owner_index, g->visited_fields_board)) {
+        areas++;
+        traverse_player_fields(g, x - 1, y);
+    }
+    if(y + 1 < g->board_height &&
+       should_field_be_visited(&g->fields[x][y + 1], owner_index, g->visited_fields_board)) {
+        areas++;
+        traverse_player_fields(g, x, y + 1);
+    }
+    if(y > 0 &&
+       should_field_be_visited(&g->fields[x][y - 1], owner_index, g->visited_fields_board)) {
+        areas++;
+        traverse_player_fields(g, x, y - 1);
+    }
+
+    return areas;
+}
+
+/** @brief Sprawdza, czy złoty ruch gracza na dane pole byłby legalny.
+ * Sprawdza, czy można wykonać legalny złoty ruch
+ * na pole o współrzędnych (@p x, @p y).
+ * Funkcja zakłada, że pole należy do jakiegoś gracza.
+ * @param[in, out] g     – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] x          – numer kolumny, mniejszy od składowej
+ *                         @p board_width ze zmiennej @p g,
+ * @param[in] y          – numer wiersza, mniejszy od składowej
+ *                         @p board_height ze zmiennej @p g.
+ * @return Wartość @p true, jeśli gracz może wykonać złoty ruch
+ * lub @p false w przeciwnym wypadku.
+ */
+static bool would_golden_move_be_legal(gamma_t *g, uint32_t x, uint32_t y) {
+    uint32_t owner_index = g->fields[x][y].owner_index;
+    uint32_t new_areas_count = areas_left_after_golden_move(g, owner_index, x, y) - 1;
+
+    reset_visited_map(g);
+    return (g->players[owner_index - 1].number_of_areas + new_areas_count <= g->max_areas);
+}
+
+/** @brief Sprawdza, czy gracz może wykonać złoty ruch na dane pole.
+ * Sprawdza, czy gracz o indekse @p player może wykonać
+ * złoty ruch na pole o współrzędnych (@p x, @p y)
+ * bez zwiększania liczby swoich obszarów.
+ * @param[in, out] g     – wskaźnik na strukturę przechowującą dane gry,
+ * @param[in] player     – indeks gracza, liczba dodatnia
+ *                         i niewiększa od składowej @p players
+ *                         ze zmiennej @p g,
+ * @param[in] x          – numer kolumny, mniejszy od składowej
+ *                         @p board_width ze zmiennej @p g,
+ * @param[in] y          – numer wiersza, mniejszy od składowej
+ *                         @p board_height ze zmiennej @p g.
+ * @return Wartość @p true, jeśli gracz może wykonać złoty ruch
+ * lub @p false w przeciwnym wypadku.
+ */
+static bool can_player_use_golden_move_on_this_field(gamma_t  *g, uint32_t player,
+                                                     uint32_t  x, uint32_t y) {
+    if(does_field_belong_to_other_player(&g->fields[x][y], player) &&
+       does_player_own_adjacent_fields(g, player, x, y)) {
+        return would_golden_move_be_legal(g, x, y);
+    }
+
+    return false;
+}
+
+/** @brief Sprawdza, czy istnieje pole, na które gracz może wykonać złoty ruch.
+ * Sprawdza, czy istnieje pole innego gracza niż ten o indeksie @p player,
+ * na które dany gracz może wykonać złoty ruch bez zwiększenia liczby
+ * swoich obszarów oraz nie sprawiając, że inny gracz po takim ruchu
+ * będzie miał za dużą liczbę obszaróœ.
  * @param[in] g       – wskaźnik na strukturę przechowującą stan gry,
  * @param[in] player  – numer gracza, liczba dodatnia niewiększa od wartości
  *                      @p players z funkcji @ref gamma_new.
- * @return Wartość @p true, jeśli gracz jeszcze nie wykonał w tej rozgrywce
- * złotego ruchu i jest przynajmniej jedno pole zajęte przez innego gracza,
+ * @return Wartość @p true, jeśli takie pole istnieje
+ * lub @p false w przeciwnym wypadku.
+ */
+static bool can_player_use_golden_move(gamma_t *g, uint32_t player) {
+    for(uint32_t i = 0; i < g->board_width; i++) {
+        for(uint32_t j = 0; j < g->board_height; j++) {
+            if(can_player_use_golden_move_on_this_field(g, player, i, j)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/** @brief Sprawdza, czy gracz może wykonać złoty ruch.
+ * Sprawdza, czy istnieje pole, na które gracz @p player może wykonać złoty ruch.
+ * @param[in] g       – wskaźnik na strukturę przechowującą stan gry,
+ * @param[in] player  – numer gracza, liczba dodatnia niewiększa od wartości
+ *                      @p players z funkcji @ref gamma_new.
+ * @return Wartość @p true, jeśli gracz @p player
+ * nie wykonał jeszcze złotego ruchu
+ * oraz istnieje pole należące do innego gracza,
+ * na które mógłby wykonać złoty ruch,
  * a @p false w przeciwnym przypadku.
  */
 bool gamma_golden_possible(gamma_t *g, uint32_t player) {
@@ -986,9 +1123,16 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
         return false;
     }
 
-    for (uint32_t i = 0; i < g->players_count; i++) {
-        if (i != player - 1 && g->players[i].number_of_fields != 0) {
-            return true;
+    if(g->players[player - 1].number_of_areas == g->max_areas) {
+        return can_player_use_golden_move(g, player);
+    }
+    else {
+        // Jeśli gracz może stworzyć nowy obszar, to zawsze
+        // może wykonać złoty ruch na jakieś istniejące pole innego gracza
+        for (uint32_t i = 0; i < g->players_count; i++) {
+            if (i != player - 1 && g->players[i].number_of_fields != 0) {
+                return true;
+            }
         }
     }
 
