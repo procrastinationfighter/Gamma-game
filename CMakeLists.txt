@@ -36,13 +36,13 @@ set(SOURCE_FILES
         src/raw_mode.c)
 
 # Zmienna, która pozwala zmienić nazwę pliku z testem z poziomu komendy cmake.
-set(TEST_FILE="src/gamma_test.c")
+set(TEST_FILE "src/gamma_test.c")
 
 # Pliki źródłowe do testowania silnika.
 set(TEST_SOURCE_FILES
+        ${TEST_FILE}
         src/gamma.c
         src/gamma.h
-        ${TEST_FILE}
         src/gamma_field.c
         src/gamma_field.h)
 

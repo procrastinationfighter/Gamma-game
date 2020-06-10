@@ -30,6 +30,26 @@
 #define clear_line() printf("\033[2K\033[1G")
 
 /**
+ * Makro używane do schowania kursora na ekranie.
+ */
+#define m_hide_cursor() printf("\033[?25l")
+
+/**
+ * Makro używane do odkrycie kursora na ekranie.
+ */
+#define m_show_cursor() printf("\033[?25h")
+
+/**
+ * Makro używane do ustawienia tła kolejnych napisów na niebieskie.
+ */
+#define set_background_color_blue() printf("\x1b[104m")
+
+/**
+ * Makro używanie do zresetowania koloru tła kolejnych napisów.
+ */
+#define reset_background_color() printf("\x1b[0m")
+
+/**
  * Makro odpowiadające liczbie, która odpowiada znakowi
  * symbolizującemu zakończenie gry.
  */
@@ -49,7 +69,7 @@
  * Jest fragmentem łańcucha symbolizującego
  * wciśnięcie klawisza strzałki.
  */
-#define LEFT_BRACKET 91
+#define LEFT_BRACKET '['
 
 /**
  * Makro odpowiadające liczbie, która
@@ -57,7 +77,7 @@
  * Jest fragmentem łańcucha symbolizującego
  * wciśnięcie klawisza strzałki.
  */
-#define ARROW_UP 65
+#define ARROW_UP 'A'
 
 /**
  * Makro odpowiadające liczbie, która
@@ -65,7 +85,7 @@
  * Jest fragmentem łańcucha symbolizującego
  * wciśnięcie klawisza strzałki.
  */
-#define ARROW_DOWN 66
+#define ARROW_DOWN 'B'
 
 /**
  * Makro odpowiadające liczbie, która
@@ -73,7 +93,7 @@
  * Jest fragmentem łańcucha symbolizującego
  * wciśnięcie klawisza strzałki.
  */
-#define ARROW_RIGHT 67
+#define ARROW_RIGHT 'C'
 
 /**
  * Makro odpowiadające liczbie, która
@@ -81,34 +101,34 @@
  * Jest fragmentem łańcucha symbolizującego
  * wciśnięcie klawisza strzałki.
  */
-#define ARROW_LEFT 68
+#define ARROW_LEFT 'D'
 
 /**
  * Makro odpowiadające liczbie, która
  * odpowiada znakowi symbolizującemu
  * wykonanie zwykłego ruchu.
  */
-#define MAKE_MOVE 32
+#define MAKE_MOVE ' '
 
 /**
  * Makro odpowiadające liczbie, która
  * odpowiada znakowi symbolizującemu
  * wykonanie złotego ruchu.
  */
-#define MAKE_GOLDEN_MOVE 103
+#define MAKE_GOLDEN_MOVE 'g'
 
 /**
  * Makro odpowiadające liczbie, która
  * odpowiada znakowi symbolizującemu
  * pominięcie tury.
  */
-#define SKIP_TURN 99
+#define SKIP_TURN 'c'
 
 
 /**
  * Struktura przechowująca informacje o grze.
  */
-struct game_information {
+typedef struct {
     uint32_t max_width;     ///< Maksymalna szerokość planszy.
     uint32_t max_height;    ///< Maksymalna wysokość planszy.
     uint32_t max_players;   ///< Ilość graczy.
@@ -116,8 +136,7 @@ struct game_information {
     uint32_t curr_x;        ///< Obecna kolumna, w której znajduje się kursor.
     uint32_t curr_y;        ///< Obecny wiersz, w którym znajduje się kursor.
     char* board;            ///< Wskaźnik na obecny wypis stanu planszy.
-};
-typedef struct game_information game_information;
+} game_information;
 
 /**
  * Wskaźnik na obecny wypis stanu planszy.
@@ -137,13 +156,13 @@ static void free_board_pointer() {
 /** @brief Przywraca widoczność kursora.
  */
 static inline void show_cursor() {
-    printf("\033[?25h");
+    m_show_cursor();
 }
 
 /** @brief Usuwa widoczność kursora.
  */
 static inline void hide_cursor() {
-    printf("\033[?25l");
+    m_hide_cursor();
     atexit(show_cursor);
 }
 
@@ -168,7 +187,8 @@ static void print_player_message(game_information *game_info, uint32_t curr_play
  * zawartych w strukturze @p game_info. Jeśli składowa
  * @p board tej struktury ma wartość NULL, wywołuje funkcję
  * @ref gamma_board.
- * @param[in] game_info          – informacje na temat gry.
+ * @param[in] game_info          – informacje na temat gry,
+ * @param[in] curr_player        - numer gracza, który ma teraz ruch.
  */
 static void print_board(game_information *game_info, uint32_t curr_player) {
     clear_screen();
@@ -184,13 +204,13 @@ static void print_board(game_information *game_info, uint32_t curr_player) {
     for(uint32_t i = 0; i < game_info->max_height; i++) {
         for(uint32_t j = 0; j < game_info->max_width; j++) {
             if(i == line && j == column && curr_player != 0) {
-                printf("\x1b[104m");
+                set_background_color_blue();
             }
             for(uint32_t k = 0; k < player_width; k++) {
                 printf("%c", game_info->board[l]);
                 l++;
             }
-            printf("\x1b[0m");
+            reset_background_color();
             if(game_info->max_players > 9) {
                 printf("%c", game_info->board[l]);
                 l++;
@@ -411,11 +431,11 @@ static void run_game(game_information *game_info) {
 }
 
 /** @brief Inicjalizuje strukturę z informacjami o grze.
- * @param[out] info             – struktura z informacjami,
+ * @param[out] game_info        – struktura z informacjami,
  * @param[in] game              – struktura gry,
  * @param[in] command           – polecenie, którym utworzono grę.
  */
-static void initialize_game(struct game_information *game_info,
+static void initialize_game(game_information *game_info,
                             gamma_t *game, command_t *command) {
     game_info->max_width = command->first_par;
     game_info->max_height = command->second_par;
@@ -428,16 +448,11 @@ static void initialize_game(struct game_information *game_info,
     clear_screen_without_deleting();
 }
 
-/** @brief Uruchamia tryb interaktywny gry gamma.
- * Uruchamia i przeprowadza grę w trybie interaktywnym.
- * @param[in,out] game          – struktura gry,
- * @param[in] command           – komenda użyta do stworzenia gry.
- */
 void run_interactive_mode(gamma_t *game, command_t *command) {
     enableRawMode();
     hide_cursor();
 
-    struct game_information game_info;
+    game_information game_info;
     initialize_game(&game_info, game, command);
     run_game(&game_info);
 }

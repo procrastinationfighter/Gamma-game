@@ -24,14 +24,13 @@
 /**
  * Struktura przechowująca wczytaną komendę.
  */
-struct command {
+typedef struct {
     char type;          ///< Pierwszy znak linii, symbolizuje typ polecenia.
     long first_par;     ///< Pierwszy parametr.
     long second_par;    ///< Drugi parametr.
     long third_par;     ///< Trzeci parametr.
     long fourth_par;    ///< Czwarty parametr.
-};
-typedef struct command command_t;
+} command_t;
 
 
 /** @brief Wypisuje informacje o błędzie.

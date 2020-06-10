@@ -15,10 +15,6 @@
 #include <limits.h>
 #include <ctype.h>
 
-/** @brief Wypisuje informacje o błędzie.
- * Wypisuje informację o błędzie oraz numer linii, w którym wystąpił.
- * @param[in] lines     – liczba linii wejścia przed uruchomieniem trybu.
- */
 inline void print_error(uint32_t lines) {
     fprintf(stderr, "ERROR %u\n", lines);
 }
@@ -30,8 +26,8 @@ inline void print_error(uint32_t lines) {
  * @return Wartość @p true jeśli znak komendy jest
  * znakiem komentarza lub znakiem końca linii.
  */
-static inline bool should_line_be_skipped(char *line) {
-    return(line != NULL && strlen(line) > 0 &&
+static inline bool should_line_be_skipped(const char *line) {
+    return(line != NULL && line[0] != '\0' &&
           (line[0] == COMMENT_SIGN || line[0] == '\n'));
 }
 
@@ -88,12 +84,12 @@ static bool is_string_valid_number(const char *p) {
  * @return Wartość @p true jeśli słowo spełnia warunki
  * lub @p false w przeciwnym wypadku.
  */
-static bool is_first_word_correct(char *word) {
-    return (word != NULL && strlen(word) == 1);
+static bool is_first_word_correct(const char *word) {
+    return (word != NULL && (word[0] != '\0' && word[1] == '\0'));
 }
 
 /** @brief Czyta jeden parametr za pomocą strtok.
- * Zczytuje za pomocą strtok następny wyraz
+ * Sczytuje za pomocą strtok następny wyraz
  * i przetwarza go na liczbę.
  * @param[out] param        – parametr,
  * @param[in]  delim        – ograniczniki dla strtok.
@@ -111,15 +107,15 @@ static bool read_parameter(long *param, char *delim) {
     }
 }
 
-/** @Brief Zczytuje aktualną linię wejścia.
- * Zczytuje aktualną linię wejścia.
+/** @brief Sczytuje aktualną linię wejścia.
+ * Sczytuje aktualną linię wejścia.
  * @return Aktualna linia wejścia
  * lub @p NULL jeśli wczytywanie się nie powiodło.
  */
 static char * get_current_line() {
     char *line = NULL;
     size_t len = 0;
-    int temp = getline(&line, &len, stdin);
+    ssize_t temp = getline(&line, &len, stdin);
     if(temp == -1) {
         free(line);
         return NULL;
@@ -130,7 +126,7 @@ static char * get_current_line() {
 }
 
 /** @brief Przetwarza wczytaną linię na parametry.
- * Zczytuje z wczytanej linii pojedynczy znak komendy
+ * Sczytuje z wczytanej linii pojedynczy znak komendy
  * oraz maksymalnie 4 parametry liczbowe.
  * @param[out] command       – struktura komendy,
  * @param[in] line           – wczytana linia.
@@ -159,15 +155,6 @@ static bool set_command(command_t *command, char *line) {
     return (writing_ok && strtok(NULL, delim) == NULL);
 }
 
-/** @brief Czyta linię z wejścia i przetwarza ją na komendę.
- * Czyta daną linię z wejścia i zapisuje
- * odczytane dane na zmiennej @p command.
- * @param[out] command      – komenda,
- * @param[out] lines        – wskaźnik na aktualną liczbę linii wejścia.
- * @return Wartość @p true jeśli się powiodło
- * lub wartość @p false jeśli zaszedł błąd
- * lub zaszedł koniec wejścia.
- */
 bool read_command(command_t *command, uint32_t *lines) {
     bool is_reading_command_finished = false;
     char *line = NULL;

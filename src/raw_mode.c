@@ -3,8 +3,12 @@
  *
  * Źródło: https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
  */
-#include <stdio.h>
+
 #include "raw_mode.h"
+
+/**
+ * Zmienna przechowująca stan terminala sprzed włączenia trybu raw.
+ */
 struct termios orig_termios;
 
 /** @brief Wyłącza tryb raw. */

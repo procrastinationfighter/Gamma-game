@@ -8,6 +8,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 #include "gamma.h"
 #include "gamma_batch_mode.h"
 #include "gamma_interactive_mode.h"
@@ -31,7 +34,7 @@ static gamma_t *game_pointer = NULL;
 
 /** @brief Zwalnia pamięć odpowiadającą za grę.
  * Zwalnia strukturę gry poprzez wywołanie @ref gamma_delete.
- * Funkcja używana jedynie przez funkcję @ref atexit.
+ * Funkcja używana jedynie przez funkcję atexit.
  */
 static void free_game_memory() {
     gamma_delete(game_pointer);
@@ -92,11 +95,48 @@ static bool check_command_correctness(command_t *command, uint32_t lines) {
         }
 }
 
+/** @brief Sprawdza, czy można grać w trybie interaktywnym.
+ * Sprawdza, czy rozmiar terminala pozwala na komfortowe
+ * rozegranie gry w trybie interaktywnym.
+ * @param[in] width             – szerokość planszy,
+ * @param[in] height            – wysokość planszy,
+ * @param[in] players           – ilość graczy.
+ * @return Wartość @p true, jeśli gra zmieści się w terminalu
+ * lub @p false w przeciwnym wypadku.
+ */
+static bool is_terminal_size_ok(uint32_t width, uint32_t height, uint32_t players) {
+    if(isatty(STDOUT_FILENO)) {
+        uint64_t real_board_width = width;
+        if (players >= 10) {
+            real_board_width = width * (log10(players) + 2);
+        }
+        struct winsize win_info;
+        int error_control = ioctl(STDOUT_FILENO, TIOCGWINSZ, &win_info);
+        if(error_control == -1) {
+            exit(EXIT_FAILURE);
+        }
+
+        // ws_row jest typu unsigned short,
+        // więc nie może być tak wielkie,
+        // w takim wypadku zabezpieczamy się przed
+        // przekroczeniem uint32_max przy dodawaniu
+        if(height > UINT32_MAX - 2) {
+            return false;
+        }
+        else {
+            return (win_info.ws_col > real_board_width && win_info.ws_row > height + 2);
+        }
+    }
+    else {
+        return true;
+    }
+}
+
 /** @brief Uruchamia odpowiedni tryb.
  * W zależności od symbolu @p type w zmiennej
  * @p command, uruchamia odpowiedni tryb.
- * @param command       – polecenie.
- * @param lines         – wskaźnik na numer aktualnej linii wejścia.
+ * @param[in] command       – polecenie.
+ * @param[in] lines         – wskaźnik na numer aktualnej linii wejścia.
  * @return Wartość @p true jeśli udało się stworzyć grę
  * lub @p false w przeciwnym wypadku.
  */
@@ -112,12 +152,26 @@ static bool run_mode(command_t *command, uint32_t *lines) {
         run_batch_mode(game_pointer, lines);
     }
     else {
-        run_interactive_mode(game_pointer, command);
+        if(is_terminal_size_ok(command->first_par, command->second_par,
+                               command->third_par)) {
+            run_interactive_mode(game_pointer, command);
+        }
+        else {
+            fprintf(stderr, "Terminal size too small. "
+                            "Resize your terminal window and try again.\n");
+            gamma_delete(game_pointer);
+            return false;
+        }
     }
 
     return true;
 }
 
+/** @brief Główna funkcja programu.
+ * Sczytuje komendy do momentu uruchomienia któregoś z trybów gry.
+ * @return 0, jeśli program zakończył się w poprawny sposób.
+ * W innym wypadku następuje wyjście z programu w innym miejscu.
+ */
 int main() {
     atexit(free_game_memory);
 

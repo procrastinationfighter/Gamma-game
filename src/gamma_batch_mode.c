@@ -45,7 +45,7 @@
 /** @brief Sprawdza, czy podany wyraz symbolizuje poprawne polecenie.
  * Sprawdza, czy podany wyraz ma długość 1 oraz czy symbolizuje jedno z poleceń
  * (dane przez makra z prefixem CALL).
- * @param commandType       – łańcuch znaków z poleceniem.
+ * @param ch       – łańcuch znaków z poleceniem.
  * @return Wartość @p true jeśli wyraz symbolizuje poprawne polecenie
  * lub @p false w przeciwnym wypadku.
  */
@@ -182,11 +182,6 @@ static bool read_and_execute_command(gamma_t *game_board, command_t  *command,
     }
 }
 
-/** @brief Przeprowadza grę za pomocą trybu wsadowego.
- * Zczytuje z wejścia i wykonuje polecenia zgodne z zasadami trybu wsadowego.
- * @param[in,out] game_board  – struktura gry,
- * @param[in,out] lines       – liczba linii wejścia przed uruchomieniem trybu.
- */
 void run_batch_mode(gamma_t *game_board, uint32_t *lines) {
     command_t curr_command;
     while(read_and_execute_command(game_board, &curr_command, lines)) {
