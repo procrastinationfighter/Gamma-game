@@ -167,6 +167,8 @@ static bool execute_command(gamma_t *game_board, command_t *command) {
  * @param[in,out] game_board    – struktura gry,
  * @param[in] command           – polecenie,
  * @param[in,out] lines         – liczba linii wejścia do tej pory.
+ * @return Wartość @p true jeśli wczytanie komendy się powiodło
+ * lub @p false jeśli zaszedł jakiś błąd.
  */
 static bool read_and_execute_command(gamma_t *game_board, command_t  *command,
                                                             uint32_t *lines) {

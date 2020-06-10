@@ -54,6 +54,7 @@ static long parse_number(char *parameter) {
         }
     }
 }
+
 /** @brief Sprawdza, czy wyraz jest poprawną liczbą.
  * Sprawdza czy wyraz @p p składa się z samych cyfr.
  * @param[in] p         – łańcuch znaków
