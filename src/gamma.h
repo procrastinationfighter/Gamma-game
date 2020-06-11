@@ -2,6 +2,7 @@
  * Interfejs klasy przechowującej stan gry gamma
  *
  * @author Marcin Peczarski <marpe@mimuw.edu.pl>
+ * @author Adam Boguszewski <ab417730@students.mimuw.edu.pl>
  * @copyright Uniwersytet Warszawski
  * @date 18.03.2020
  */
@@ -111,5 +112,24 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player);
  * planszy lub NULL, jeśli nie udało się zaalokować pamięci.
  */
 char* gamma_board(gamma_t *g);
+
+/** @brief Daje liczbę obszarów posiadanych przez gracza.
+ * Przekazuje liczbę różnych obszarów posiadanych przez gracza
+ * o indeksie @p player.
+ * @param[in,out] g   – wskaźnik na strukturę przechowującą stan gry,
+ * @param[in] player  – numer gracza, liczba dodatnia niewiększa od wartości
+ *                      @p players z funkcji @ref gamma_new,
+ * @return Liczba obszarów tego gracza, jeśli bierze on udział w grze
+ * lub 0, jeśli nie ma gracza o takim indeksie.
+ */
+uint32_t gamma_player_owned_areas(gamma_t *g, uint32_t player);
+
+/** @brief Daje maksymalną liczbę dozwolonych obszarów.
+ * Przekazuje maksymalną liczbę obszarów,
+ * jaką gracz może posiadać w trakcie danej rozgrywki.
+ * @param[in,out] g   – wskaźnik na strukturę przechowującą stan gry.
+ * @return Maksymalna liczba dozwolonych obszarów w grze.
+ */
+uint32_t gamma_max_areas(gamma_t *g);
 
 #endif /* GAMMA_H */

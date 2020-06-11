@@ -179,6 +179,9 @@ static void print_player_message(game_information *game_info, uint32_t curr_play
             printf("NOT ");
         }
         printf("POSSIBLE\n");
+        printf("PLAYER OWNED AREAS: %u/%u\n",
+                gamma_player_owned_areas(game_info->game, curr_player),
+                gamma_max_areas(game_info->game));
     }
 }
 

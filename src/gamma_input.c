@@ -56,7 +56,7 @@ static long parse_number(char *parameter) {
 }
 
 /** @brief Sprawdza, czy linia składa się tylko z prawidłowych znaków.
- * Sprawdza czy pierwszy znak linii jest pojedynczym słowem
+ * Sprawdza czy pierwszy znak linii jest osobnym słowem
  * oraz czy pozostałe znaki są znakami białymi lub cyframi.
  * @param line                  – sprawdzana linia.
  * @return Wartość @p true jeśli znaki w linii spełniają powyższe warunki

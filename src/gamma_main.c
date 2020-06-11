@@ -27,6 +27,18 @@
 #define INTERACTIVE_MODE_SYMBOL 'I'
 
 /**
+ * Z góry ustalona minimalna szerokość terminala,
+ * dla której komunikaty trybu interaktywnego będą wypisywane poprawnie.
+ */
+#define MINIMAL_WINDOW_WIDTH 50
+
+/**
+ * Z góry ustalona dodatkowa wysokość terminala
+ * (nie licząc wysokości planszy), dla której
+ * komunikaty trybu interaktywnego zmieszczą się na ekranie.
+ */
+#define MINIMAL_WINDOW_BONUS_HEIGHT 5
+/**
  * Wskaźnik na strukturę gry. Zasięg pliku, aby można
  * było użyć funkcji atexit do jego zwolnienia.
  */
@@ -38,6 +50,7 @@ static gamma_t *game_pointer = NULL;
  */
 static void free_game_memory() {
     gamma_delete(game_pointer);
+    game_pointer = NULL;
 }
 
 /** @brief Sprawdza, czy parametry są w zakresie typu uint32_t.
@@ -120,11 +133,13 @@ static bool is_terminal_size_ok(uint32_t width, uint32_t height, uint32_t player
         // więc nie może być tak wielkie,
         // w takim wypadku zabezpieczamy się przed
         // przekroczeniem uint32_max przy dodawaniu
-        if(height > UINT32_MAX - 2) {
+        if(height > UINT32_MAX - MINIMAL_WINDOW_BONUS_HEIGHT ||
+           win_info.ws_col < MINIMAL_WINDOW_WIDTH) {
             return false;
         }
         else {
-            return (win_info.ws_col > real_board_width && win_info.ws_row > height + 2);
+            return (win_info.ws_col > real_board_width &&
+                    win_info.ws_row > height + MINIMAL_WINDOW_BONUS_HEIGHT);
         }
     }
     else {
@@ -159,7 +174,7 @@ static bool run_mode(command_t *command, uint32_t *lines) {
         else {
             fprintf(stderr, "Terminal size too small. "
                             "Resize your terminal window and try again.\n");
-            gamma_delete(game_pointer);
+            free_game_memory();
             return false;
         }
     }

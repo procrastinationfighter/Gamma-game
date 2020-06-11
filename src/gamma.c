@@ -1170,3 +1170,13 @@ char* gamma_board(gamma_t *g) {
 
     return map_string;
 }
+
+inline uint32_t gamma_player_owned_areas(gamma_t *g, uint32_t player) {
+    return (player <= g->players_count)
+            ? g->players[player - 1].number_of_areas
+            : 0;
+}
+
+inline uint32_t gamma_max_areas(gamma_t *g) {
+    return g->max_areas;
+}
