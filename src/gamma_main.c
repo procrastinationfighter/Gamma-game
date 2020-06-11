@@ -37,7 +37,7 @@
  * (nie licząc wysokości planszy), dla której
  * komunikaty trybu interaktywnego zmieszczą się na ekranie.
  */
-#define MINIMAL_WINDOW_BONUS_HEIGHT 5
+#define MINIMAL_WINDOW_BONUS_HEIGHT 7
 /**
  * Wskaźnik na strukturę gry. Zasięg pliku, aby można
  * było użyć funkcji atexit do jego zwolnienia.

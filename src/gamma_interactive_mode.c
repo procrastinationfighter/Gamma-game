@@ -42,12 +42,24 @@
 /**
  * Makro używane do ustawienia tła kolejnych napisów na niebieskie.
  */
-#define set_background_color_blue() printf("\x1b[104m")
+#define set_background_color_light_blue() printf("\x1b[104m")
 
 /**
- * Makro używanie do zresetowania koloru tła kolejnych napisów.
+ * Makro używane do zresetowania koloru tła kolejnych napisów.
  */
-#define reset_background_color() printf("\x1b[0m")
+#define reset_text_color() printf("\x1b[0m")
+
+/**
+ * Makro używane do ustawienia koloru tekstu na ten odpowiadający zwycięzcy
+ * oraz dodaje pogrubienie. Domyślnie użyty kolor to żółty.
+ */
+#define set_text_color_winner() printf("\x1b[1m\x1b[33m")
+
+/**
+ * Makro używane do ustawienia koloru tekstu na ten odpowiadający przegranemu
+ * oraz dodaje kursywę. Domyślnie użyty kolor to cyjan.
+ */
+#define set_text_color_loser() printf("\x1b[3m\x1b[36m")
 
 /**
  * Makro odpowiadające liczbie, która odpowiada znakowi
@@ -124,6 +136,36 @@
  */
 #define SKIP_TURN 'c'
 
+/**
+ * Makro wypisujące lewy górny róg ramki wokół gry.
+ */
+#define print_left_upper_corner() printf("\u2554")
+
+/**
+ * Makro wypisujące prawy górny róg ramki wokół gry.
+ */
+#define print_right_upper_corner() printf("\u2557")
+
+/**
+ * Makro wypisujące lewy dolny róg ramki wokół gry.
+ */
+#define print_left_lower_corner() printf("\u255A")
+
+/**
+ * Makro wypisujące prawy dolny róg ramki wokół gry.
+ */
+#define print_right_lower_corner() printf("\u255D")
+
+/**
+ * Makro wypisujące pionowy element ramki wokół gry.
+ */
+#define print_vertical_edge() printf("\u2551")
+
+/**
+ * Makro wypisujące poziomy element ramki wokół gry.
+ */
+#define print_horizontal_edge() printf("\u2550")
+
 
 /**
  * Struktura przechowująca informacje o grze.
@@ -185,6 +227,24 @@ static void print_player_message(game_information *game_info, uint32_t curr_play
     }
 }
 
+static void print_upper_border(uint32_t board_width) {
+    print_left_upper_corner();
+    for(uint32_t i = 0; i < board_width; i++) {
+        print_horizontal_edge();
+    }
+    print_right_upper_corner();
+    printf("\n");
+}
+
+static void print_lower_border(uint32_t board_width) {
+    print_left_lower_corner();
+    for(uint32_t i = 0; i < board_width; i++) {
+        print_horizontal_edge();
+    }
+    print_right_lower_corner();
+    printf("\n");
+}
+
 /** @brief Wypisuje aktualny stan planszy z zaznaczonym polem.
  * Wypisuje aktualny stan planszy na podstawie informacji
  * zawartych w strukturze @p game_info. Jeśli składowa
@@ -203,26 +263,31 @@ static void print_board(game_information *game_info, uint32_t curr_player) {
     uint32_t column = game_info->curr_x;
     uint32_t player_width = log10(game_info->max_players) + 1;
     uint32_t l = 0;
+    uint32_t field_width = player_width + (game_info->max_players >= 10);
 
+    print_upper_border(field_width * game_info->max_width);
     for(uint32_t i = 0; i < game_info->max_height; i++) {
+        print_vertical_edge();
         for(uint32_t j = 0; j < game_info->max_width; j++) {
             if(i == line && j == column && curr_player != 0) {
-                set_background_color_blue();
+                set_background_color_light_blue();
             }
             for(uint32_t k = 0; k < player_width; k++) {
                 printf("%c", game_info->board[l]);
                 l++;
             }
-            reset_background_color();
+            reset_text_color();
             if(game_info->max_players > 9) {
                 printf("%c", game_info->board[l]);
                 l++;
             }
         }
+        print_vertical_edge();
         // Wypisywanie końca linii.
         printf("%c", game_info->board[l]);
         l++;
     }
+    print_lower_border(field_width * game_info->max_width);
     print_player_message(game_info, curr_player);
 }
 
@@ -393,9 +458,21 @@ static bool play_turn(game_information *game_info, uint32_t curr_player) {
  */
 static void print_game_result(game_information *game_info) {
     print_board(game_info, 0);
+    uint64_t best_score = gamma_largest_number_of_owned_fields(game_info->game);
     for(uint32_t i = 0; i < game_info->max_players; i++) {
-        printf("PLAYER %u: %lu OWNED FIELDS\n",
-                i + 1, gamma_busy_fields(game_info->game, i + 1));
+        uint64_t curr_busy_fields = gamma_busy_fields(game_info->game, i + 1);
+        if(curr_busy_fields == best_score) {
+            set_text_color_winner();
+        }
+        else {
+            set_text_color_loser();
+        }
+        printf("PLAYER %u: %lu OWNED FIELD", i + 1, curr_busy_fields);
+        if(curr_busy_fields != 1) {
+            printf("S");
+        }
+        printf("\n");
+        reset_text_color();
     }
     printf("THANKS FOR PLAYING!\n");
 }

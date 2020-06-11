@@ -120,7 +120,7 @@ char* gamma_board(gamma_t *g);
  * @param[in] player  – numer gracza, liczba dodatnia niewiększa od wartości
  *                      @p players z funkcji @ref gamma_new,
  * @return Liczba obszarów tego gracza, jeśli bierze on udział w grze
- * lub 0, jeśli nie ma gracza o takim indeksie.
+ * lub 0, jeśli nie ma gracza o takim indeksie lub przekazano NULL jako argument.
  */
 uint32_t gamma_player_owned_areas(gamma_t *g, uint32_t player);
 
@@ -128,8 +128,18 @@ uint32_t gamma_player_owned_areas(gamma_t *g, uint32_t player);
  * Przekazuje maksymalną liczbę obszarów,
  * jaką gracz może posiadać w trakcie danej rozgrywki.
  * @param[in,out] g   – wskaźnik na strukturę przechowującą stan gry.
- * @return Maksymalna liczba dozwolonych obszarów w grze.
+ * @return Maksymalna liczba dozwolonych obszarów w grze
+ * lub 0 jeśli przekazano NULL jako argument.
  */
 uint32_t gamma_max_areas(gamma_t *g);
+
+/** @brief Daje największą liczbę posiadanych pól przez graczy.
+ * Przekazuje liczbę pól posiadanych przez gracza
+ * o największej liczbie pól.
+ * @param[in,out] g   – wskaźnik na strukturę przechowującą stan gry.
+ * @return Liczba tych pól
+ * lub 0 jeśli przekazano NULL jako argument.
+ */
+uint64_t gamma_largest_number_of_owned_fields(gamma_t *g);
 
 #endif /* GAMMA_H */

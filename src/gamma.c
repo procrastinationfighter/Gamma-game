@@ -1172,11 +1172,33 @@ char* gamma_board(gamma_t *g) {
 }
 
 inline uint32_t gamma_player_owned_areas(gamma_t *g, uint32_t player) {
-    return (player <= g->players_count)
-            ? g->players[player - 1].number_of_areas
-            : 0;
+    if(g != NULL) {
+        return (player <= g->players_count)
+               ? g->players[player - 1].number_of_areas
+               : 0;
+    }
+    else {
+        return 0;
+    }
 }
 
 inline uint32_t gamma_max_areas(gamma_t *g) {
-    return g->max_areas;
+    return (g != NULL) ? g->max_areas : 0;
+}
+
+inline uint64_t gamma_largest_number_of_owned_fields(gamma_t *g) {
+    if(g != NULL) {
+        uint64_t curr_max = 0;
+        for(uint32_t i = 0; i < g->players_count; i++) {
+            uint64_t temp = gamma_busy_fields(g, i + 1);
+            if(temp > curr_max) {
+                curr_max = temp;
+            }
+        }
+
+        return curr_max;
+    }
+    else {
+        return 0;
+    }
 }
