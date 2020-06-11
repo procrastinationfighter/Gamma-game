@@ -55,57 +55,50 @@ static long parse_number(char *parameter) {
     }
 }
 
-/** @brief Sprawdza, czy wyraz jest poprawną liczbą.
- * Sprawdza czy wyraz @p p składa się z samych cyfr.
- * @param[in] p         – łańcuch znaków
- * @return Wartość @p true jeśli wyraz składa się z samych
- * cyfr lub jest NULLem lub wartość @p false w przeciwnym wypadku.
+/** @brief Sprawdza, czy linia składa się tylko z prawidłowych znaków.
+ * Sprawdza czy pierwszy znak linii jest pojedynczym słowem
+ * oraz czy pozostałe znaki są znakami białymi lub cyframi.
+ * @param line                  – sprawdzana linia.
+ * @return Wartość @p true jeśli znaki w linii spełniają powyższe warunki
+ * lub @p false w przeciwnym wypadku.
  */
-static bool is_string_valid_number(const char *p) {
-    if(p == NULL) {
-        return true;
+static bool is_line_correct(const char *line) {
+    if(line == NULL) {
+        return false;
     }
     else {
         int i = 0;
-        while(p[i] != '\0') {
-            if(!isdigit(p[i])) {
-                return false;
+        while (line[i] != '\n') {
+            if (i == 0) {
+                char next = line[1];
+                if (isspace(line[0]) || (!isspace(next) && next != '\0')) {
+                    return false;
+                }
+            }
+            else {
+                char curr = line[i];
+                if (!isspace(curr) && !isdigit(curr)) {
+                    return false;
+                }
             }
             i++;
         }
+        return true;
     }
-
-    return true;
-}
-
-/** @brief Sprawdza poprawność pierwszego wyrazu w linii.
- * Sprawdza, czy pierwszy wyraz w linii na pewno jest
- * wyrazem jednoliterowym oraz czy istnieje.
- * @param[in] word              – słowo.
- * @return Wartość @p true jeśli słowo spełnia warunki
- * lub @p false w przeciwnym wypadku.
- */
-static bool is_first_word_correct(const char *word) {
-    return (word != NULL && (word[0] != '\0' && word[1] == '\0'));
 }
 
 /** @brief Czyta jeden parametr za pomocą strtok.
  * Sczytuje za pomocą strtok następny wyraz
  * i przetwarza go na liczbę.
- * @param[out] param        – parametr,
+ * Funkcja zakłada, że następny wyraz to same liczby,
+ * w momencie wywołania funkcji powinno to już być sprawdzone.
  * @param[in]  delim        – ograniczniki dla strtok.
  * @return Wartość @p true jeśli poprawnie zamieniono
  * wyraz na liczbę lub @p false w przeciwnym razie.
  */
-static bool read_parameter(long *param, char *delim) {
+static long read_parameter(char *delim) {
     char *p = strtok(NULL, delim);
-    if(is_string_valid_number(p)) {
-        *param = parse_number(p);
-        return true;
-    }
-    else {
-        return false;
-    }
+    return parse_number(p);
 }
 
 /** @brief Sczytuje aktualną linię wejścia.
@@ -136,9 +129,12 @@ static char * get_current_line() {
  */
 static bool set_command(command_t *command, char *line) {
     char first = line[0];
+    if(!is_line_correct(line)) {
+        return false;
+    }
     char delim[] = " \n\t\v\f\r";
     char *com = strtok(line, delim);
-    if(!is_first_word_correct(com) || com[0] != first) {
+    if(com[0] != first) {
         return false;
     }
 
@@ -146,14 +142,11 @@ static bool set_command(command_t *command, char *line) {
 
     long *params[4] = {&command->first_par, &command->second_par,
                        &command->third_par, &command->fourth_par};
-    int i = 0;
-    bool writing_ok = true;
-    while(i < 4 && writing_ok) {
-        writing_ok = read_parameter(params[i], delim);
-        i++;
+    for(int i = 0; i < 4; i++) {
+        *params[i] = read_parameter(delim);
     }
 
-    return (writing_ok && strtok(NULL, delim) == NULL);
+    return (strtok(NULL, delim) == NULL);
 }
 
 bool read_command(command_t *command, uint32_t *lines) {
