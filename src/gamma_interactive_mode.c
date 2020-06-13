@@ -227,6 +227,9 @@ static void print_player_message(game_information *game_info, uint32_t curr_play
     }
 }
 
+/** @brief Wypisuje górną krawędź ramki z planszą.
+ * @param board_width      - szerekość planszy.
+ */
 static void print_upper_border(uint32_t board_width) {
     print_left_upper_corner();
     for(uint32_t i = 0; i < board_width; i++) {
@@ -236,6 +239,9 @@ static void print_upper_border(uint32_t board_width) {
     printf("\n");
 }
 
+/** @brief Wypisuje dolną krawędź ramki z planszą.
+ * @param board_width      - szerekość planszy.
+ */
 static void print_lower_border(uint32_t board_width) {
     print_left_lower_corner();
     for(uint32_t i = 0; i < board_width; i++) {
