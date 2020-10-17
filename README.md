@@ -53,7 +53,7 @@ To play the game in batch mode, type command:```B width height players areas``` 
 
 ```p``` – prints the board.
 
-If a command is wrong, communicate ```ERROR line```is printed, where line is number of line with the wrong command.
+If a command is wrong, ```ERROR line```is printed, where line is number of line with the wrong command.
 
 ### Interactive mode
 
