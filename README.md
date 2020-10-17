@@ -17,7 +17,7 @@ The game can be played in batch mode and interactive mode.
 In batch mode, the game is played by writing commands. 
 In interactive mode, players take turns that consist of one move (including the golden move). The game ends when every player is unable to make a move.
 
-More information about batch and interactive modes is in other sections.
+More information about batch and interactive modes can be found in section Usage.
 
 ## Installation
 The game can be installed only on Linux. To install the game, download the repository, then change directory to your local version of the repository. 
