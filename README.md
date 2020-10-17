@@ -37,3 +37,28 @@ Unfortunately, the documentation is currently available only in Polish.
 
 ## Usage
 To launch the game, use command ```./gamma``` in the directory you used command ```make```. 
+
+### Batch mode
+To play the game in batch mode, type command:```B width height players areas``` where width, height, players and areas should be replaced by respective numbers. For example, command ```B 10 20 2 5``` will create a game in batch mode, with 10x20 board, 2 players and 5 maximum areas owned by one player. Then, you can play the game using the following commands: 
+  
+```m player x y``` – tries to perform a move by player with number player on field with coordinates (x, y). Prints 1 if succeeded and 0 otherwise.
+
+```g player x y``` – tries to perform a golden move by player with number player on field with coordinates (x, y). Prints 1 if succeeded and 0 otherwise.
+
+```b player``` – prints number of field taken by player with number player.
+
+```f player``` – prints number of fields that player with number player can take.
+
+```q player``` – checks, whether player with number player can make a golden move. Prints 1 if the move is possible and 0 otherwise.
+
+```p``` – prints the board.
+
+If a command is wrong, communicate ```ERROR line```is printed, where line is number of line with the wrong command.
+
+### Interactive mode
+
+To play the game in interactive mode, type command ```I width height players areas``` where width, height, players and areas should be replaced by respective numbers. For example, command ```I 10 20 2 5``` will create a game in Interactive mode, with 10x20 board, 2 players and 5 maximum areas owned by one player. Then, you can play the game using your keyboard. 
+
+You can move the marker using arrow keys. The game automatically chooses, which player should move (starting from player one and omiting players that can't make a move). To place your token on a field, press ```space``` when marker is on your desired field. To make a golden move on a field, press ```G``` when your desired field is marked. You can skip your turn by pressing ```C```. The game ends when every player is unable to move. You can also end the game early by pressing ```CTRL+D```. After finishing the game, final state of board is displayed along with the results for every player.
+
+This is the recommended game mode if you want to actually play the game.
