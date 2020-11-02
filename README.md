@@ -31,7 +31,7 @@ cmake ..
 make
 ```
 You can also use commands `make test` to create a test of game's engine (example tests are shown in `gamma_test.c`, if you want to add your own tests, 
-run cmake command with flag `TEST_FILE=directory`, where <directory> is a directory to your file with tests) and `make doc` to make documentation for the project.
+run cmake command with flag ```TEST_FILE=directory```, where `directory` is a directory to your file with tests) and `make doc` to make documentation for the project.
 
 ## Documentation
 If you already installed the game, in order to automatically generate documentation you have to change directory to your local version of the repository and type ```make doc```. The documentation is generated using Doxygen.
