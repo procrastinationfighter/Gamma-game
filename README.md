@@ -1,4 +1,6 @@
 # The Gamma game
+## Introduction
+This project was written as a part of Individual Programming Project class in summer semester of academic year 2019/2020.
 ## Description
 The game takes place on a rectangle-shaped board that consists of square fields. 
 Two fields are adjacent to each other if they are in the same row or column of the board.
