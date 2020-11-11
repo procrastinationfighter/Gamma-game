@@ -23,7 +23,7 @@ More information about batch and interactive modes can be found in section Usage
 
 ## Installation
 The game can be installed only on Linux. To install the game, download the repository, then change directory to your local version of the repository. 
-Then write in command line:
+Then use commands:
 ```
 mkdir game
 cd game
@@ -55,7 +55,7 @@ To play the game in batch mode, type command:```B width height players areas``` 
 
 ```p``` – prints the board.
 
-If a command is wrong, ```ERROR line```is printed, where line is number of line with the wrong command.
+If a command is wrong, ```ERROR line```is printed, where line is the number of line with the wrong command.
 
 ### Interactive mode
 
